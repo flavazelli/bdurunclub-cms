@@ -6,7 +6,7 @@ import { authenticated } from './access/authenticated'
 export const Events: CollectionConfig = {
   slug: 'events',
   access: {
-    read: () => true,
+    read: anyone,
   },
   fields: [
     {
