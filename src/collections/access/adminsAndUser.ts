@@ -2,15 +2,13 @@ import type { Access } from 'payload'
 
 import { checkRole } from './checkRole'
 
-const adminsAndUser: Access = ({ req: { user } }) => {
+const adminsAndUser: Access = ({ req: { user }, id }) => {
   if (user) {
     if (checkRole(['admin'], user)) {
       return true
     }
 
-    return {
-      id: user.id,
-    }
+    return user.id === id
   }
 
   return false

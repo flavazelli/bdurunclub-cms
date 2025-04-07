@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { headersWithCors } from 'payload'
 
 import { anyone } from './access/anyone'
 import { authenticated } from './access/authenticated'
@@ -29,23 +30,164 @@ export const Events: CollectionConfig = {
       }
     }, 
     {
+      name: 'startingLocation',
+      type: 'text',
+      access: {
+        read: authenticated,
+      },
+    },
+    {
+      name: 'description',
+      type: 'textarea',
+      access: {
+        read: authenticated,
+      },
+    },
+    {
+      name: 'gpxFile',
+      type: 'relationship',
+      relationTo: 'gpx-files',
+      access: {
+        read: authenticated,
+      },
+      hasMany: false,
+      required: true
+    },
+    {
       name: 'registeredUsers', 
       type: 'relationship',
       access: {
-        update: ({ req: { user }, id, data, doc }) => { 
-          return doc?.registeredUsers.includes(user?.id)
-        },
         read: authenticated
       },
       relationTo: 'users', 
       hasMany: true,
+      unique: true,
+    }, 
+  ],
+  endpoints: [
+    {
+      path: '/:id/unregister',
+      method: 'post',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({
+            message: 'not authenticated'
+          }, {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            })
+        },{ status: 401 })
+        }
+        if (!req.routeParams?.id) {
+          return Response.json({
+            message: 'event id not provided'
+          },{
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            })
+        },  { status: 400 }) 
+
+        }
+        const event = await req.payload.findByID({
+          collection: 'events',
+          id: req.routeParams?.id,
+          depth: 0
+        })
+        
+        let registeredUsers = event.registeredUsers?.filter((userId) => userId !== req.user.id)
+       
+        await req.payload.update({
+          collection: 'events',
+          id: req.routeParams?.id,
+          data: {
+            registeredUsers
+          }
+        })
+
+
+
+        return Response.json(
+          { message: 'success' },
+          {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            })
+        },{ status: 200 })
+      },
     }, 
     {
-      type: "richText", 
-      name: "mapLink",
-      access: {
-        read: authenticated
-      }
+      path: '/:id/register',
+      method: 'post',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({
+            message: 'not authenticated'
+          }, {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            })
+        },{ status: 401 })
+        }
+        if (!req.routeParams?.id) {
+          return Response.json({
+            message: 'event id not provided'
+          },{
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            })
+        },  { status: 400 }) 
+
+        }
+        const event = await req.payload.findByID({
+          collection: 'events',
+          id: req.routeParams?.id,
+          depth: 0})
+          
+        if (event.registeredUsers?.includes(req.user.id)) {
+          return Response.json({
+            message: 'already registered'
+          }, {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            })
+        }, { status: 400 })
+        }
+
+        await req.payload.update({
+          collection: 'events',
+          id: req.routeParams?.id,
+          data: {
+            registeredUsers: [req.user.id, ...event?.registeredUsers]
+          }
+        })
+
+        const createdJob = await req.payload.jobs.queue({
+          // Pass the name of the workflow
+          workflow: 'sendEmailToConfirmRun',
+          // The input type will be automatically typed
+          // according to the input you've defined for this workflow
+          input: {
+            userId: req.user.id, 
+            eventId: event.id
+          },
+        })
+        
+        return Response.json(
+          { message: 'success' },
+          {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            })
+        },{ status: 200 })
+      },
     }
   ],
+  
 }
