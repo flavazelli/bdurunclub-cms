@@ -167,7 +167,7 @@ export const Events: CollectionConfig = {
           }
         })
 
-        const createdJob = await req.payload.jobs.queue({
+        await req.payload.jobs.queue({
           // Pass the name of the workflow
           workflow: 'sendEmailToConfirmRun',
           // The input type will be automatically typed

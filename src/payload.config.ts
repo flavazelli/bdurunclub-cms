@@ -5,13 +5,14 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
-import sharp from 'sharp'
+import sharp, { queue } from 'sharp'
 
 import { Users } from './collections/Users'
 import { GPXFiles } from './collections/GPXFiles'
 import { Events } from './collections/Events'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
-import type { TaskConfig, WorkflowConfig } from 'payload'
+import type { TaskConfig as BaseTaskConfig, WorkflowConfig } from 'payload'
+
 import confirmRegistration from './collections/emailTemplates/confirmRegistration'
 import sendHourReminder from './collections/emailTemplates/sendHourReminder'
 import { v4 as uuidv4 } from 'uuid';
@@ -54,7 +55,7 @@ export default buildConfig({
     payloadCloudPlugin(),
     // storage-adapter-placeholder
   ],
-  cors: ['http://localhost:8100', 'http://localhost:5173'], 
+  cors: ['http://localhost:8100', 'http://localhost:5173', 'http://localhost:4173'], 
   jobs: {
     tasks: [
       {
@@ -169,7 +170,61 @@ export default buildConfig({
             },
           }
         },
-      } as unknown as TaskConfig<'sendReminderOneHourBeforeEventStart'>
+      } as unknown as TaskConfig<'sendReminderOneHourBeforeEventStart'>, 
+      {
+        slug: 'publishNextWeeksRuns',
+        retries: {
+          shouldRestore: false
+        },
+        queue: 'thursdaysat7pm', 
+        handler: async ({ input, req }) => {
+          const now = new Date();
+          const nextMonday = new Date(now);
+          nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7)); // Next Monday
+          nextMonday.setHours(0, 0, 0, 0);
+
+          const nextSunday = new Date(nextMonday);
+          nextSunday.setDate(nextMonday.getDate() + 6); // Following Sunday
+          nextSunday.setHours(23, 59, 59, 999);
+
+          const events = await req.payload.find({
+            collection: 'events',
+            where: {
+              and: [
+                {
+                  eventTime: {
+                    greater_than_equal: nextMonday.toISOString(),
+                  },
+                },
+                {
+                  eventTime: {
+                    less_than_equal: nextSunday.toISOString(),
+                  },
+                },
+              ],
+            },
+          });
+
+          // Publish the events as needed
+          for (const event of events.docs) {
+            // Logic to publish the event
+            await req.payload.update({
+              collection: 'events',
+              id: event.id,
+              data: {
+                published: true,
+              },
+            });
+          }
+          //TODO: Send an email to the admin or relevant user
+
+          return {
+            output: {
+              success: true
+            },
+          }
+        },
+      } as unknown as TaskConfig<'publishNextWeeksRuns'>
     ],
     workflows: [
       {
@@ -193,7 +248,7 @@ export default buildConfig({
           // You need to define a unique ID for this task invocation
           // that will always be the same if this workflow fails
           // and is re-executed in the future. Here, we hard-code it to '1'
-            const output = await tasks.sendConfirmationEmail(uuidv4(), {
+            await tasks.sendConfirmationEmail(uuidv4(), {
               input: {
               userId: job.input.userId,
               eventId: job.input.eventId,
@@ -210,9 +265,13 @@ export default buildConfig({
       },
       {
         cron: '*/30 * * * *', // every half hour
-        limit: 100, // limit jobs to process each run
+        limit: 100, 
         queue: 'everyHalfHour'
-      }
+      }, 
+      {
+        cron: '0 19 * * 4', // every Thursday at 7pm
+        queue: 'thursdaysat7pm',
+      }, 
       // add as many cron jobs as you want
     ],
     shouldAutoRun: async (payload) => {
@@ -226,6 +285,10 @@ export default buildConfig({
     // Schedule the `sendReminderOneHourBeforeEventStart` task to run immediately on initialization
     await payload.jobs.queue({
       task: 'sendReminderOneHourBeforeEventStart',
+      input: {}, // No specific input is required for this task
+    });
+    await payload.jobs.queue({
+      task: 'publishNextWeeksRuns',
       input: {}, // No specific input is required for this task
     });
   },
