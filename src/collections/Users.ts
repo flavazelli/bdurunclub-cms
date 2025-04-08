@@ -7,6 +7,7 @@ import adminsAndUser from './access/adminsAndUser'
 import { anyone } from './access/anyone'
 import { checkRole } from './access/checkRole'
 import { authenticated } from './access/authenticated'
+import { protectRoles } from './hooks/protectRoles'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -78,9 +79,9 @@ export const Users: CollectionConfig = {
     delete: admins,
     admin: ({ req: { user } }) => checkRole(['admin'], user),
   },
-  // hooks: {
-  //   afterChange: [loginAfterCreate],
-  // },
+  hooks: {
+    beforeChange: [protectRoles],
+  },
   fields: [
     {
       name: 'firstName',

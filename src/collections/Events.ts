@@ -172,7 +172,7 @@ export const Events: CollectionConfig = {
           workflow: 'sendEmailToConfirmRun',
           // The input type will be automatically typed
           // according to the input you've defined for this workflow
-          input: {
+          input: { 
             userId: req.user.id, 
             eventId: event.id
           },
