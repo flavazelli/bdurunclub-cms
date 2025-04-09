@@ -33,7 +33,7 @@ export default buildConfig({
   collections: [Users, Events, GPXFiles],
   editor: lexicalEditor(),
   email: nodemailerAdapter({
-    defaultFromAddress: 'info@bdurun.club',
+    defaultFromAddress: 'francis.lavazelli@gmail.com',
     defaultFromName: 'Info BDurun',
     transportOptions: {
       host: process.env.SMTP_HOST,
@@ -51,7 +51,7 @@ export default buildConfig({
   },
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
-    options: {
+    connectOptions: {
       dbName: process.env.DATABASE_NAME || 'bdurunclub',
     }}),
   sharp,
