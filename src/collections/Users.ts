@@ -104,7 +104,9 @@ export const Users: CollectionConfig = {
           label: 'Member',
           value: 'member',
         },
+        
       ],
+      defaultValue: 'member',
       access: {
         read: admins,
       },

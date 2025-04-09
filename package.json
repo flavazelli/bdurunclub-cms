@@ -20,7 +20,7 @@
     "@payloadcms/email-nodemailer": "^3.33.0",
     "@payloadcms/next": "3.31.0",
     "@payloadcms/payload-cloud": "3.31.0",
-    "@payloadcms/plugin-sentry": "^3.33.0",
+    "@payloadcms/plugin-sentry": "3.31.0",
     "@payloadcms/richtext-lexical": "3.31.0",
     "@payloadcms/storage-gcs": "3.31.0",
     "@sentry/nextjs": "^9.12.0",
