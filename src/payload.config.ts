@@ -16,6 +16,7 @@ import type { PayloadRequest, TaskConfig, WorkflowConfig } from 'payload'
 import confirmRegistration from './collections/emailTemplates/confirmRegistration'
 import sendHourReminder from './collections/emailTemplates/sendHourReminder'
 import { v4 as uuidv4 } from 'uuid'
+import { gcsStorage } from '@payloadcms/storage-gcs'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -27,19 +28,20 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
+  serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL || 'http://localhost:3000',
+  cors: [process.env.CLIENT_URL || 'http://localhost:3000'],
   collections: [Users, Events, GPXFiles],
   editor: lexicalEditor(),
   email: nodemailerAdapter({
     defaultFromAddress: 'info@bdurun.club',
     defaultFromName: 'Info BDurun',
-    // Nodemailer transportOptions
     transportOptions: {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
-      }
+      },
     },
     skipVerify: true,
   }),
@@ -53,9 +55,21 @@ export default buildConfig({
   sharp,
   plugins: [
     payloadCloudPlugin(),
-    // storage-adapter-placeholder
+    ...(process.env.ENV === 'production'
+      ? [
+          gcsStorage({
+            collections: {
+              'gpx-files': true,
+            },
+            bucket: process.env.GCS_BUCKET,
+            options: {
+              apiEndpoint: process.env.GCS_ENDPOINT,
+              projectId: process.env.GCS_PROJECT_ID,
+            },
+          }),
+        ]
+      : []),
   ],
-  cors: ['http://localhost:8100', 'http://localhost:5173', 'http://localhost:4173'],
   jobs: {
     tasks: [
       {
@@ -83,12 +97,12 @@ export default buildConfig({
           const user = await req.payload.findByID({
             collection: 'users',
             id: input.userId,
-          })
+          });
 
           const event = await req.payload.findByID({
             collection: 'events',
             id: input.eventId,
-          })
+          });
 
           const eventDate = new Date(event.eventTime ?? '').toLocaleString('en-US', {
             weekday: 'long',
@@ -97,9 +111,9 @@ export default buildConfig({
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-          })
+          });
 
-          const url = `${process.env.CLIENT_URL}/events/${event.id}`
+          const url = `${process.env.CLIENT_URL}/events/${event.id}`;
 
           await req.payload.sendEmail({
             to: user.email,
@@ -111,13 +125,13 @@ export default buildConfig({
               eventLocation: event.startingLocation ?? 'Location not specified',
               eventLink: url,
             }),
-          })
+          });
 
           return {
             output: {
               success: true,
             },
-          }
+          };
         },
       } as unknown as TaskConfig<'sendConfirmationEmail'>,
       {
@@ -126,9 +140,9 @@ export default buildConfig({
           shouldRestore: false,
         },
         handler: async ({ req }: { req: PayloadRequest }) => {
-          const now = new Date()
-          const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
-          // Find all events starting an hour from now
+          const now = new Date();
+          const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
           const events = await req.payload.find({
             collection: 'events',
             where: {
@@ -145,7 +159,7 @@ export default buildConfig({
                 },
               ],
             },
-          })
+          });
 
           for (const event of events.docs) {
             for (const user of event.registeredUsers) {
@@ -159,7 +173,7 @@ export default buildConfig({
                   startLocation: event.startingLocation,
                   eventLink: `${process.env.CLIENT_URL}/events/${event.id}`,
                 }),
-              })
+              });
             }
           }
 
@@ -167,7 +181,7 @@ export default buildConfig({
             output: {
               success: true,
             },
-          }
+          };
         },
       } as unknown as TaskConfig<'sendReminderOneHourBeforeEventStart'>,
       {
@@ -177,14 +191,14 @@ export default buildConfig({
         },
         queue: 'thursdaysat7pm',
         handler: async ({ req }: { req: PayloadRequest }) => {
-          const now = new Date()
-          const nextMonday = new Date(now)
-          nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7)) // Next Monday
-          nextMonday.setHours(0, 0, 0, 0)
+          const now = new Date();
+          const nextMonday = new Date(now);
+          nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7));
+          nextMonday.setHours(0, 0, 0, 0);
 
-          const nextSunday = new Date(nextMonday)
-          nextSunday.setDate(nextMonday.getDate() + 6) // Following Sunday
-          nextSunday.setHours(23, 59, 59, 999)
+          const nextSunday = new Date(nextMonday);
+          nextSunday.setDate(nextMonday.getDate() + 6);
+          nextSunday.setHours(23, 59, 59, 999);
 
           const events = await req.payload.find({
             collection: 'events',
@@ -202,26 +216,17 @@ export default buildConfig({
                 },
               ],
             },
-          })
+          });
 
-          // Publish the events as needed
           for (const event of events.docs) {
             // Logic to publish the event
-            // await req.payload.update({
-            //   collection: 'events',
-            //   id: event.id,
-            //   data: {
-            //     published: true,
-            //   },
-            // })
           }
-          //TODO: Send an email to the admin or relevant user
 
           return {
             output: {
               success: true,
             },
-          }
+          };
         },
       } as unknown as TaskConfig<'publishNextWeeksRuns'>,
     ],
@@ -241,52 +246,42 @@ export default buildConfig({
           },
         ],
         handler: async ({ job, tasks }) => {
-          // This workflow first runs a task called `createPost`.
-
-          // You need to define a unique ID for this task invocation
-          // that will always be the same if this workflow fails
-          // and is re-executed in the future. Here, we hard-code it to '1'
           await tasks.sendConfirmationEmail(uuidv4(), {
             input: {
               userId: job.input.userId,
               eventId: job.input.eventId,
             },
-          })
+          });
         },
       } as WorkflowConfig<'sendEmailToConfirmRun'>,
     ],
     autoRun: [
       {
-        cron: '0 * * * *', // every hour at minute 0
-        limit: 100, // limit jobs to process each run
+        cron: '0 * * * *',
+        limit: 100,
       },
       {
-        cron: '*/30 * * * *', // every half hour
+        cron: '*/30 * * * *',
         limit: 100,
         queue: 'everyHalfHour',
       },
       {
-        cron: '0 19 * * 4', // every Thursday at 7pm
+        cron: '0 19 * * 4',
         queue: 'thursdaysat7pm',
       },
-      // add as many cron jobs as you want
     ],
     shouldAutoRun: async () => {
-      // Tell Payload if it should run jobs or not.
-      // This function will be invoked each time Payload goes to pick up and run jobs.
-      // If this function ever returns false, the cron schedule will be stopped.
-      return true
+      return true;
     },
   },
   onInit: async (payload) => {
-    // Schedule the `sendReminderOneHourBeforeEventStart` task to run immediately on initialization
     await payload.jobs.queue({
       task: 'sendReminderOneHourBeforeEventStart',
-      input: {}, // No specific input is required for this task
-    })
+      input: {},
+    });
     await payload.jobs.queue({
       task: 'publishNextWeeksRuns',
-      input: {}, // No specific input is required for this task
-    })
+      input: {},
+    });
   },
-})
+});
