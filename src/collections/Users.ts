@@ -66,15 +66,10 @@ export const Users: CollectionConfig = {
               </body> 
             </html>`
       },
-    },
+    }
   },
   admin: {
     useAsTitle: 'email',
-    email: {  
-      access: {
-        read: adminsAndUser,
-      },
-    }
   },
   access: {
     read: authenticated,
