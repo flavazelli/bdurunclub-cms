@@ -33,7 +33,7 @@ export default buildConfig({
   collections: [Users, Events, GPXFiles],
   editor: lexicalEditor(),
   email: nodemailerAdapter({
-    defaultFromAddress: 'test-xkjn41m2yk54z781.mlsender.net',
+    defaultFromAddress: 'bdurunclub@test-xkjn41m2yk54z781.mlsender.net',
     defaultFromName: 'Info BDurun',
     transportOptions: {
       host: process.env.SMTP_HOST,
