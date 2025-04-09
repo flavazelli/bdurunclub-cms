@@ -28,7 +28,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  serverURL: process.env.CLIENT_URL || 'http://localhost:3000',
+  serverURL: process.env.SERVER_URL || 'http://localhost:3000',
   cors: [process.env.CLIENT_URL || 'http://localhost:3000'],
   collections: [Users, Events, GPXFiles],
   editor: lexicalEditor(),
