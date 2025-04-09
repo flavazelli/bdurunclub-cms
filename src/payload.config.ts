@@ -57,20 +57,16 @@ export default buildConfig({
   sharp,
   plugins: [
     payloadCloudPlugin(),
-    ...(process.env.ENV === 'production'
-      ? [
-          gcsStorage({
-            collections: {
-              'gpx-files': true,
-            },
-            bucket: process.env.GCS_BUCKET,
-            options: {
-              apiEndpoint: process.env.GCS_ENDPOINT,
-              projectId: process.env.GCS_PROJECT_ID,
-            },
-          }),
-        ]
-      : []),
+    gcsStorage({
+      collections: {
+        'gpx-files': true,
+      },
+      bucket: process.env.GCS_BUCKET,
+      options: {
+        projectId: process.env.GCS_PROJECT_ID,
+      },
+      enabled: process.env.NODE_ENV === 'production',
+    }),
   ],
   jobs: {
     tasks: [

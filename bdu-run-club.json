@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "wired-episode-239400",
+  "private_key_id": "2cdc5353a091e564310f085bc5e67771fa92b541",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3AZdL4soxNlyp\nVMBgS4bqfOrkY+yVJtRWmKG3cCt+CDXiLh8ED8JtUghIo7sxZ7zXLO2ANf6iJ9f2\nl3dFpRYJdJP8OfcWHLa1maejUcFVDKO6rG9OKqb7rIDybCYR5ojr+hh06LfOQ161\nIumudDnCSDKJMThLl1kNZ8EAHLNoDYXQvLPgyQr/BEBFmHUqZlWpHi7Kqx5F/vLX\n9PYANTmG94RMY6z0hm0uuzoj0HsqoUpEPQQgEGB4BZY9XCeLWN0yXr6EGdS633K+\nOfBjVNdlY21rj3cXIVyEb3GWB3du4+oqfrlPzWZuyvl+mNt6daQj7arK6UluyLFx\n8DX2Pt6JAgMBAAECggEAFbAtFN5m6vJ6hHYu/wUvEzlvAavWnQ3cf/oXvux0Dbwo\nXUqXp2dnZIWicLANc7tLwHkqbmriZ1JEgGIOow9/r0AvIjxhDDBRS5qkU4Z8BznN\nFPGcQU3Bu2Auv0wng4XoN9shrIfrR0O/BMWDSdxWqgUyDrCUGjVGEFYkToCYQcjr\nWgf7ejtOKnmysPBkYUwnmmCCQvnY+4Z2QvABpf/Bdrpq3tbI550hKUnLHXWYcYR6\nnM0jSAnP9SZX1RhZRjcE/zkw1nU0NZSfFP9D9fKQQCzPlBv3UyjAjJ2rEvSRNKxT\nGlmbrKIlGUjTQco+i5Vkxi3lOtfQH4YSUOzZx/guBwKBgQD4rIl7oCDzr1BtUSSm\nQxPb4hXAFf4CuSqiRQckBvFO/Dv8eMm1LLIqL03pwxQosklmhc/HkRD94rWPLqll\nTWRhNpyfQAYSixtQPrusntWGhqoCWsTsC+N8VBXs/zEbiMf/mpFkznMqsPEoqql7\nWDBy0ru7/O4WsWbc7RwSOkj+kwKBgQC8ZcwaHS0V0aB7TAav2TEfbmXksch1+fVd\nZiHRfXZznACaFXUMpeUffagoTkxWA9+188a6P48ufuOyivWif7DdL/pwXFnxWXNT\niiIww6O5tFzAfyzLqidNQpNDpao8XptT3aQwiCBYxttrH7pivOmqYoE6a2T8kDVo\n8kN5UpCD8wKBgQDMpcFnGfrEUKzRqguNQHqhZEgeEns+ZoBtln0v6v6/z9jWB9mH\n3kapbNCj5kU60K6TTuAWDo57Qg3EzdPeaHiJgFYYwKm+rPhHa7krcHOtCDn1Qhn5\nYDdQZCq/JayWSlS9R8kLutMQeRmeLATaW1NTy5VwOdD+n/RVMFT/szPLPQKBgFEB\naD/2OZN/HgTFzL5BofiEzHUH6Eyp3FF7f6EG1C6jbjLSdRCqKBlhOzORbwsxATjI\nB7O/bn4sexUi4LktNEv2vDUh0F6Q+qB57XeQN066+YKfbBBqKhnzPUTB76+jciAe\nVeG0NkxVvLST4N1howrq7evDj5l1HDHysQZydMb3AoGAPsWaZZ723k91mEvEYs7A\n9kRljd7/7WWV1YIYo+p7/CVrvjckmusdWRJ/1M8ms6JVVBWlWq3NTQ9Mrx+20rvl\nZHi+emI/2GNaaEzhWy4a63JPpSX3yfKHMtYZf//s+P6OdPefpbMPjcaSF+1WV1bX\nGLgbezvSwvd/tdMTC/T1JTs=\n-----END PRIVATE KEY-----\n",
+  "client_email": "bdu-run-club@wired-episode-239400.iam.gserviceaccount.com",
+  "client_id": "102622663195517121308",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/bdu-run-club%40wired-episode-239400.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
