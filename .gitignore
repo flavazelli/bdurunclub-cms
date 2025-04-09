@@ -43,3 +43,6 @@ next-env.d.ts
 /media
 /gpx-files
 .pnpm-store/
+
+# Sentry Config File
+.env.sentry-build-plugin
