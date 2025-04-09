@@ -1,11 +1,20 @@
-export default ({firstName, eventTitle, startLocation, eventTime, eventLink }: { 
-  firstName: string; 
-  eventTitle: string; 
-  startLocation: string; 
-  eventTime: string; 
-  eventLink: string; 
+const sendHourReminder = ({
+  firstName,
+  eventTitle,
+  startLocation,
+  eventTime,
+  eventLink,
+}: {
+  firstName: string
+  eventTitle: string
+  startLocation: string
+  eventTime: string
+  eventLink: string
 }) => {
-  const humanReadableTime = new Date(eventTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const humanReadableTime = new Date(eventTime).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -62,5 +71,7 @@ export default ({firstName, eventTitle, startLocation, eventTime, eventLink }: {
       </tr>
     </table>
   </body>
-</html>`;
-};
+</html>`
+}
+
+export default sendHourReminder

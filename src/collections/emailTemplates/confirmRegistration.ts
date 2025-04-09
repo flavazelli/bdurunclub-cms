@@ -1,16 +1,16 @@
-export default ({
+const confirmRegistration = function ({
   firstName,
   eventName,
   eventDate,
   eventLocation,
   eventLink,
 }: {
-  firstName: string;
-  eventName: string;
-  eventDate: string;
-  eventLocation: string;
-  eventLink: string;
-}) => {
+  firstName: string
+  eventName: string
+  eventDate: string
+  eventLocation: string
+  eventLink: string
+}) {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -67,5 +67,7 @@ export default ({
       </tr>
     </table>
   </body>
-</html>`;
-};
+</html>`
+}
+
+export { confirmRegistration as default }

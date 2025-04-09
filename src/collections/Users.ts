@@ -1,6 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { headersWithCors, CollectionAfterChangeHook } from 'payload'
-
+import { headersWithCors } from 'payload'
 
 import { admins } from './access/admins'
 import adminsAndUser from './access/adminsAndUser'
@@ -16,9 +15,9 @@ export const Users: CollectionConfig = {
     cookies: {
       secure: true,
       domain: process.env.COOKIE_DOMAIN,
-    }, 
-    verify:{
-      generateEmailHTML:  ({ req, token, user }) => {
+    },
+    verify: {
+      generateEmailHTML: ({ token }) => {
         // Use the token provided to allow your user to verify their account
         const url = `${process.env.CLIENT_URL}/verify-email?token=${token}`
         const year = new Date().getFullYear()
@@ -66,8 +65,8 @@ export const Users: CollectionConfig = {
                 </table>
               </body> 
             </html>`
-      }
-    }
+      },
+    },
   },
   admin: {
     useAsTitle: 'email',
@@ -110,8 +109,8 @@ export const Users: CollectionConfig = {
         },
       ],
       access: {
-        read: admins
-      }
+        read: admins,
+      },
     },
     {
       name: 'email',
@@ -119,8 +118,8 @@ export const Users: CollectionConfig = {
       unique: true,
       required: true,
       access: {
-        read: adminsAndUser
-      }
+        read: adminsAndUser,
+      },
     },
   ],
   endpoints: [
@@ -129,15 +128,18 @@ export const Users: CollectionConfig = {
       method: 'get',
       handler: async (req) => {
         if (!req.user) {
-          return Response.json({
-            message: 'not authenticated',
-          }, {
-            status: 401,
-            headers: headersWithCors({
-              headers: new Headers(),
-              req,
-          }),
-          })
+          return Response.json(
+            {
+              message: 'not authenticated',
+            },
+            {
+              status: 401,
+              headers: headersWithCors({
+                headers: new Headers(),
+                req,
+              }),
+            },
+          )
         }
         const { user } = req
         const { payload } = req
@@ -152,20 +154,20 @@ export const Users: CollectionConfig = {
             },
           },
           depth: 0,
-          sort: 'eventTime', 
-        })  
+          sort: 'eventTime',
+        })
         return Response.json(events, {
           headers: headersWithCors({
             headers: new Headers(),
             req,
+          }),
         })
-      })
+      },
     },
-      }
-  ], 
+  ],
 
-    hooks: {
-      afterChange: [
+  hooks: {
+    afterChange: [
       async ({ operation, doc, req }) => {
         console.log(doc)
         if (operation === 'create') {
@@ -181,11 +183,9 @@ export const Users: CollectionConfig = {
             `,
           })
         }
-      }
+      },
     ],
-    
+
     // ...
   },
-
-
 }

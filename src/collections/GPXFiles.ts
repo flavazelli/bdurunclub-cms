@@ -17,9 +17,9 @@ export const GPXFiles: CollectionConfig = {
   },
   hooks: {
     afterRead: [
-      ({ doc, req, res }) => {
+      ({ doc, res }) => {
         if (res && doc?.filename) {
-          res.setHeader('Content-Disposition', `attachment; filename="${doc.filename}"`);
+          res.setHeader('Content-Disposition', `attachment; filename="${doc.filename}"`)
         }
       },
     ],

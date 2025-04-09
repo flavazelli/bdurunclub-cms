@@ -1,6 +1,6 @@
-export default ({ req, token, user }: { req: any; token: string; user: any }) => ({ req, token, user }) => {
-const url = `${process.env.CLIENT_URL}/verify-email?token=${token}`
-const year = new Date().getFullYear()
+const verifyEmailTemplate = ({ token }: { token: string }) => {
+  const url = `${process.env.CLIENT_URL}/verify-email?token=${token}`
+  const year = new Date().getFullYear()
   return `<!DOCTYPE html>
   <html lang="en">
     <head>
@@ -48,3 +48,5 @@ const year = new Date().getFullYear()
     </body>
   </html>`
 }
+
+export default verifyEmailTemplate
