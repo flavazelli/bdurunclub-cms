@@ -7,7 +7,6 @@ export const protectRoles: FieldHook<{ id: string } & User> = ({ data, req }) =>
   const isAdmin = req.user?.roles.includes('admin') || data.email === 'francis.lavazelli@gmail.com' // for the seed script
 
   if (data.roles?.includes('admin') && !isAdmin) {
-    console.log('not allowed to set admin role')
     return ['member']
   }
 
