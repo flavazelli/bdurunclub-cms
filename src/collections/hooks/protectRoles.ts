@@ -6,11 +6,12 @@ import type { User } from '../../payload-types'
 export const protectRoles: FieldHook<{ id: string } & User> = ({ data, req }) => {
   const isAdmin = req.user?.roles.includes('admin') || data.email === 'francis.lavazelli@gmail.com' // for the seed script
 
-  if (!isAdmin) {
-    return ['user']
+  if (data.roles?.includes('admin') && !isAdmin) {
+    console.log('not allowed to set admin role')
+    return ['member']
   }
 
   const userRoles = new Set(data?.roles || [])
-  userRoles.add('user')
+  userRoles.add('admin')
   return [...userRoles]
 }
