@@ -51,7 +51,9 @@ export default buildConfig({
   },
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
-  }),
+    options: {
+      dbName: process.env.DATABASE_NAME || 'bdurunclub',
+    }}),
   sharp,
   plugins: [
     payloadCloudPlugin(),

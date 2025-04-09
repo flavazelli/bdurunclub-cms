@@ -70,6 +70,11 @@ export const Users: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'email',
+    email: {  
+      access: {
+        read: adminsAndUser,
+      },
+    }
   },
   access: {
     read: authenticated,
@@ -111,16 +116,7 @@ export const Users: CollectionConfig = {
       access: {
         read: admins,
       },
-    },
-    {
-      name: 'email',
-      type: 'email',
-      unique: true,
-      required: true,
-      access: {
-        read: adminsAndUser,
-      },
-    },
+    }
   ],
   endpoints: [
     {
