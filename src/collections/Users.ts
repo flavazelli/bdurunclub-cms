@@ -78,9 +78,6 @@ export const Users: CollectionConfig = {
     delete: admins,
     admin: ({ req: { user } }) => checkRole(['admin'], user),
   },
-  hooks: {
-    beforeChange: [protectRoles],
-  },
   fields: [
     {
       name: 'firstName',
@@ -95,9 +92,9 @@ export const Users: CollectionConfig = {
       type: 'select',
       hasMany: true,
       saveToJWT: true,
-      // hooks: {
-      //   beforeChange: [protectRoles],
-      // },
+      hooks: {
+        beforeChange: [protectRoles],
+      },
       options: [
         {
           label: 'Admin',
