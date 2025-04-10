@@ -182,9 +182,9 @@ export const Events: CollectionConfig = {
           collection: 'events',
           id: req.routeParams?.id,
           data: {
-            registeredUsers: [req.user.id, ...event?.registeredUsers],
+            registeredUsers: [req.user.id, ...(event?.registeredUsers || [])],
           },
-        })
+        });
 
         await req.payload.jobs.queue({
           // Pass the name of the workflow
