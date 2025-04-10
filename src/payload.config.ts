@@ -34,7 +34,7 @@ export default buildConfig({
   editor: lexicalEditor(),
   email: nodemailerAdapter({
     defaultFromAddress: 'MS_1PD4AI@test-xkjn41m2yk54z781.mlsender.net',
-    defaultFromName: 'Info BDurun',
+    defaultFromName: '🏃 BDURunClub',
     transportOptions: {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
