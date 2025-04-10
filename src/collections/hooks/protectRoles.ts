@@ -11,6 +11,6 @@ export const protectRoles: FieldHook<{ id: string } & User> = ({ data, req }) =>
   }
 
   const userRoles = new Set(data?.roles || [])
-  userRoles.add('admin')
+  userRoles.add('member') // ensure there is always a `member` role
   return [...userRoles]
 }
