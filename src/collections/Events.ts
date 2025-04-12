@@ -3,6 +3,7 @@ import { headersWithCors } from 'payload'
 
 import { anyone } from './access/anyone'
 import { authenticated } from './access/authenticated'
+import { admins } from './access/admins'
 
 export const Events: CollectionConfig = {
   slug: 'events',
@@ -12,27 +13,17 @@ export const Events: CollectionConfig = {
         return {
           or: [
             {
-              _status: {
-                equals: 'published',
+              visible: {
+                equals: true,
               },
-            },
-            {
-              _status: {
-                exists: false,
-              },
-            },
+            }
           ],
-        } 
+        }
       } else if (req.user.roles.includes('admin')) {
           return true
       }
 
       return false
-    }
-  },
-  versions: {
-    drafts: {
-      schedulePublish: true
     }
   },
   fields: [
@@ -53,6 +44,14 @@ export const Events: CollectionConfig = {
       },
       access: {
         read: anyone,
+      },
+    },
+    {
+      name:'visible', 
+      type: 'checkbox',
+      defaultValue: false,
+      access: {
+        read: admins,
       },
     },
     {

@@ -99,7 +99,6 @@ export interface Config {
       sendConfirmationEmail: TaskSendConfirmationEmail;
       sendReminderOneHourBeforeEventStart: TaskSendReminderOneHourBeforeEventStart;
       publishNextWeeksRuns: TaskPublishNextWeeksRuns;
-      schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
         output: unknown;
@@ -189,13 +188,13 @@ export interface Event {
   id: string;
   title?: string | null;
   eventTime?: string | null;
+  visible?: boolean | null;
   startingLocation?: string | null;
   description?: string | null;
   gpxFile: string | GpxFile;
   registeredUsers?: (string | User)[] | null;
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -268,12 +267,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug:
-          | 'inline'
-          | 'sendConfirmationEmail'
-          | 'sendReminderOneHourBeforeEventStart'
-          | 'publishNextWeeksRuns'
-          | 'schedulePublish';
+        taskSlug: 'inline' | 'sendConfirmationEmail' | 'sendReminderOneHourBeforeEventStart' | 'publishNextWeeksRuns';
         taskID: string;
         input?:
           | {
@@ -308,13 +302,7 @@ export interface PayloadJob {
     | null;
   workflowSlug?: 'sendEmailToConfirmRun' | null;
   taskSlug?:
-    | (
-        | 'inline'
-        | 'sendConfirmationEmail'
-        | 'sendReminderOneHourBeforeEventStart'
-        | 'publishNextWeeksRuns'
-        | 'schedulePublish'
-      )
+    | ('inline' | 'sendConfirmationEmail' | 'sendReminderOneHourBeforeEventStart' | 'publishNextWeeksRuns')
     | null;
   queue?: string | null;
   waitUntil?: string | null;
@@ -417,13 +405,13 @@ export interface UsersSelect<T extends boolean = true> {
 export interface EventsSelect<T extends boolean = true> {
   title?: T;
   eventTime?: T;
+  visible?: T;
   startingLocation?: T;
   description?: T;
   gpxFile?: T;
   registeredUsers?: T;
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -532,23 +520,6 @@ export interface TaskSendReminderOneHourBeforeEventStart {
  */
 export interface TaskPublishNextWeeksRuns {
   input?: unknown;
-  output?: unknown;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "TaskSchedulePublish".
- */
-export interface TaskSchedulePublish {
-  input: {
-    type?: ('publish' | 'unpublish') | null;
-    locale?: string | null;
-    doc?: {
-      relationTo: 'events';
-      value: string | Event;
-    } | null;
-    global?: string | null;
-    user?: (string | null) | User;
-  };
   output?: unknown;
 }
 /**

@@ -134,12 +134,23 @@ export const Users: CollectionConfig = {
         const events = await payload.find({
           collection: 'events',
           where: {
-            registeredUsers: {
-              equals: user.id,
-            },
-            eventTime: {
-              greater_than: new Date(),
-            },
+            and: [
+              {
+          registeredUsers: {
+            equals: user.id,
+          },
+              },
+              {
+          eventTime: {
+            greater_than: new Date(),
+          },
+              },
+              {
+          visible: {
+            equals: true,
+          },
+              },
+            ],
           },
           depth: 0,
           sort: 'eventTime',
@@ -157,7 +168,6 @@ export const Users: CollectionConfig = {
   hooks: {
     afterChange: [
       async ({ operation, doc, req }) => {
-        console.log(doc)
         if (operation === 'create') {
           await req.payload.sendEmail({
             to: 'francis.lavazelli@gmail.com',
