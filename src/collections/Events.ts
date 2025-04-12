@@ -8,26 +8,27 @@ export const Events: CollectionConfig = {
   slug: 'events',
   access: {
     read: ({ req }) => {
-      // If there is a user logged in,
-      // let them retrieve all documents
-      if (req.user.roles.includes('admin')) {
-        return true
-      } else if (!req.user?.roles.includes('admin')) return {
-        or: [
-          {
-            _status: {
-              equals: 'published',
+      if (!req.user! || !req.user?.roles?.includes('admin')) {
+        return {
+          or: [
+            {
+              _status: {
+                equals: 'published',
+              },
             },
-          },
-          {
-            _status: {
-              exists: false,
+            {
+              _status: {
+                exists: false,
+              },
             },
-          },
-        ],
-      } 
+          ],
+        } 
+      } else if (req.user.roles.includes('admin')) {
+          return true
+      }
+
       return false
-    },
+    }
   },
   versions: {
     drafts: {
