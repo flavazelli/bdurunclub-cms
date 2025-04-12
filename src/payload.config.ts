@@ -29,7 +29,8 @@ export default buildConfig({
     },
   },
   serverURL: process.env.SERVER_URL || 'http://localhost:3000',
-  cors: [process.env.CLIENT_URL || 'http://localhost:3000'],
+  cors: [process.env.CLIENT_URL || 'http://localhost:5173'],
+  csrf: [process.env.CLIENT_URL || 'http://localhost:5173'],
   collections: [Users, Events, GPXFiles],
   editor: lexicalEditor(),
   email: nodemailerAdapter({
@@ -38,7 +39,7 @@ export default buildConfig({
     transportOptions: {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
-      auth: {
+      auth: { 
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
@@ -65,7 +66,7 @@ export default buildConfig({
       options: {
         projectId: process.env.GCS_PROJECT_ID,
       },
-      enabled: process.env.NODE_ENV === 'production',
+      enabled: process.env.NODE_ENV === 'development',
     }),
   ],
   jobs: {
@@ -281,7 +282,7 @@ export default buildConfig({
       },
     ],
     shouldAutoRun: async () => {
-      return true;
+      return process.env.NODE_ENV === 'development';
     },
   },
   onInit: async (payload) => {

@@ -8,7 +8,7 @@ const adminsAndUser: Access = ({ req: { user }, id }) => {
       return true
     }
 
-    return user.id === id
+    return user.id == id
   }
 
   return false

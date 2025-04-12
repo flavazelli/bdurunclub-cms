@@ -7,7 +7,32 @@ import { authenticated } from './access/authenticated'
 export const Events: CollectionConfig = {
   slug: 'events',
   access: {
-    read: anyone,
+    read: ({ req }) => {
+      // If there is a user logged in,
+      // let them retrieve all documents
+      if (req.user.roles.includes('admin')) {
+        return true
+      } else if (!req.user?.roles.includes('admin')) return {
+        or: [
+          {
+            _status: {
+              equals: 'published',
+            },
+          },
+          {
+            _status: {
+              exists: false,
+            },
+          },
+        ],
+      } 
+      return false
+    },
+  },
+  versions: {
+    drafts: {
+      schedulePublish: true
+    }
   },
   fields: [
     {
@@ -61,7 +86,6 @@ export const Events: CollectionConfig = {
       },
       relationTo: 'users',
       hasMany: true,
-      unique: true,
     },
   ],
   endpoints: [
@@ -178,6 +202,8 @@ export const Events: CollectionConfig = {
           )
         }
 
+        console.log('event', event)
+
         await req.payload.update({
           collection: 'events',
           id: req.routeParams?.id,
@@ -185,6 +211,7 @@ export const Events: CollectionConfig = {
             registeredUsers: [req.user.id, ...(event?.registeredUsers || [])],
           },
         });
+
 
         await req.payload.jobs.queue({
           // Pass the name of the workflow
