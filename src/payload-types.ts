@@ -99,6 +99,7 @@ export interface Config {
       sendConfirmationEmail: TaskSendConfirmationEmail;
       sendReminderOneHourBeforeEventStart: TaskSendReminderOneHourBeforeEventStart;
       publishNextWeeksRuns: TaskPublishNextWeeksRuns;
+      schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
         output: unknown;
@@ -136,6 +137,37 @@ export interface User {
   firstName?: string | null;
   lastName?: string | null;
   roles?: ('admin' | 'member')[] | null;
+  level?: ('beginner' | 'intermediate' | 'advanced') | null;
+  bduResident?: boolean | null;
+  pace?:
+    | (
+        | '4:00'
+        | '4:10'
+        | '4:20'
+        | '4:30'
+        | '4:40'
+        | '4:50'
+        | '5:00'
+        | '5:10'
+        | '5:20'
+        | '5:30'
+        | '5:40'
+        | '5:50'
+        | '6:00'
+        | '6:10'
+        | '6:20'
+        | '6:30'
+        | '6:40'
+        | '6:50'
+        | '7:00'
+        | '7:10'
+        | '7:20'
+        | '7:30'
+        | '7:40'
+        | '7:50'
+        | '8:00'
+      )
+    | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -163,6 +195,7 @@ export interface Event {
   registeredUsers?: (string | User)[] | null;
   updatedAt: string;
   createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -235,7 +268,12 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'sendConfirmationEmail' | 'sendReminderOneHourBeforeEventStart' | 'publishNextWeeksRuns';
+        taskSlug:
+          | 'inline'
+          | 'sendConfirmationEmail'
+          | 'sendReminderOneHourBeforeEventStart'
+          | 'publishNextWeeksRuns'
+          | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -270,7 +308,13 @@ export interface PayloadJob {
     | null;
   workflowSlug?: 'sendEmailToConfirmRun' | null;
   taskSlug?:
-    | ('inline' | 'sendConfirmationEmail' | 'sendReminderOneHourBeforeEventStart' | 'publishNextWeeksRuns')
+    | (
+        | 'inline'
+        | 'sendConfirmationEmail'
+        | 'sendReminderOneHourBeforeEventStart'
+        | 'publishNextWeeksRuns'
+        | 'schedulePublish'
+      )
     | null;
   queue?: string | null;
   waitUntil?: string | null;
@@ -351,6 +395,9 @@ export interface UsersSelect<T extends boolean = true> {
   firstName?: T;
   lastName?: T;
   roles?: T;
+  level?: T;
+  bduResident?: T;
+  pace?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -376,6 +423,7 @@ export interface EventsSelect<T extends boolean = true> {
   registeredUsers?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -484,6 +532,23 @@ export interface TaskSendReminderOneHourBeforeEventStart {
  */
 export interface TaskPublishNextWeeksRuns {
   input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSchedulePublish".
+ */
+export interface TaskSchedulePublish {
+  input: {
+    type?: ('publish' | 'unpublish') | null;
+    locale?: string | null;
+    doc?: {
+      relationTo: 'events';
+      value: string | Event;
+    } | null;
+    global?: string | null;
+    user?: (string | null) | User;
+  };
   output?: unknown;
 }
 /**
