@@ -86,6 +86,7 @@ export const Events: CollectionConfig = {
       },
       relationTo: 'users',
       hasMany: true,
+      unique: true,
     },
   ],
   endpoints: [
@@ -201,8 +202,6 @@ export const Events: CollectionConfig = {
             { status: 400 },
           )
         }
-
-        console.log('event', event)
 
         await req.payload.update({
           collection: 'events',

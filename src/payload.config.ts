@@ -66,7 +66,7 @@ export default buildConfig({
       options: {
         projectId: process.env.GCS_PROJECT_ID,
       },
-      enabled: process.env.NODE_ENV === 'development',
+      enabled: process.env.NODE_ENV === 'production',
     }),
   ],
   jobs: {
