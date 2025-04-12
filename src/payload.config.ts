@@ -17,6 +17,8 @@ import confirmRegistration from './collections/emailTemplates/confirmRegistratio
 import sendHourReminder from './collections/emailTemplates/sendHourReminder'
 import { v4 as uuidv4 } from 'uuid'
 import { gcsStorage } from '@payloadcms/storage-gcs'
+import { nextWeekRunsEmail } from './collections/emailTemplates/nextWeeksRuns'
+import { sendTelegramWeeklyUpdate } from '@/integrations/telegram/sendTelegramWeeklyUpdate'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -44,7 +46,6 @@ export default buildConfig({
         pass: process.env.SMTP_PASS,
       },
     },
-    skipVerify: true,
   }),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -151,26 +152,28 @@ export default buildConfig({
           shouldRestore: false,
         },
         handler: async ({ req }: { req: PayloadRequest }) => {
-          const now = new Date();
-          const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+            const now = new Date();
+            const nextHour = new Date(now);
+            nextHour.setMinutes(0, 0, 0);
+            nextHour.setHours(nextHour.getHours() + 1);
 
-          const events = await req.payload.find({
+            const events = await req.payload.find({
             collection: 'events',
             where: {
               and: [
-                {
-                  eventTime: {
-                    greater_than_equal: now.toISOString(),
-                  },
+              {
+                eventTime: {
+                greater_than_equal: nextHour.toISOString(),
                 },
-                {
-                  eventTime: {
-                    less_than: oneHourFromNow.toISOString(),
-                  },
+              },
+              {
+                eventTime: {
+                less_than: new Date(nextHour.getTime() + 60 * 60 * 1000).toISOString(),
                 },
+              },
               ],
             },
-          });
+            });
 
           for (const event of events.docs) {
             for (const user of event.registeredUsers) {
@@ -225,13 +228,61 @@ export default buildConfig({
                     less_than_equal: nextSunday.toISOString(),
                   },
                 },
+                {
+                  visible: {
+                    equals: false,
+                  }
+                }
               ],
-            },
+            }
           });
 
-          for (const event of events.docs) {
-            // Logic to publish the event
+          if (events.totalDocs === 0) {
+            return {
+              output: {
+                success: true,
+              },
+            };
           }
+
+          //publish the events
+          await req.payload.update({
+            collection: 'events',
+            where: {
+              and: [
+                {
+                  eventTime: {
+                    greater_than_equal: nextMonday.toISOString(),
+                  },
+                },
+                {
+                  eventTime: {
+                    less_than_equal: nextSunday.toISOString(),
+                  },
+                },
+                {
+                  visible: {
+                    equals: false,
+                  }
+                }
+              ],
+            },
+            data: {
+              visible: true,
+            },
+          })
+
+          const users = await req.payload.find({
+            collection: 'users'
+          });
+          //send email to all users
+          await req.payload.sendEmail({
+            bcc: users.docs.map(user => user.email).join(','),
+            subject: 'New Runs Published for Next Week',
+            html: nextWeekRunsEmail(events.docs),
+          });
+
+          await sendTelegramWeeklyUpdate(events.docs);
 
           return {
             output: {
@@ -277,7 +328,7 @@ export default buildConfig({
         queue: 'everyHalfHour',
       },
       {
-        cron: '0 19 * * 4',
+        cron: '0 * * * *',
         queue: 'thursdaysat7pm',
       },
     ],
