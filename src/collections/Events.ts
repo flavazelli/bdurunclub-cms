@@ -75,7 +75,7 @@ export const Events: CollectionConfig = {
       access: {
         read: authenticated,
       },
-      hasMany: false,
+      hasMany: true,
       required: true,
     },
     {
