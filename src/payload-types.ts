@@ -191,7 +191,7 @@ export interface Event {
   visible?: boolean | null;
   startingLocation?: string | null;
   description?: string | null;
-  gpxFile: string | GpxFile;
+  gpxFile: (string | GpxFile)[];
   registeredUsers?: (string | User)[] | null;
   updatedAt: string;
   createdAt: string;
