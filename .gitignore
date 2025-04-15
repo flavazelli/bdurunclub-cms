@@ -48,3 +48,7 @@ next-env.d.ts
 .env.sentry-build-plugin
 
 local.gcpkey.json
+
+terraform.tfvars
+*.tfstate*
+
