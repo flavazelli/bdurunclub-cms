@@ -14,8 +14,9 @@ export const Users: CollectionConfig = {
   auth: {
     tokenExpiration: 28800, // 8 hours
     cookies: {
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       domain: process.env.COOKIE_DOMAIN,
+      sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'Lax',
     },
     verify: {
       generateEmailHTML: ({token}) => verifyEmailTemplate({ token })
