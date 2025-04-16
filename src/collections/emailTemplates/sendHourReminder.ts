@@ -8,13 +8,9 @@ const sendHourReminder = ({
   firstName: string
   eventTitle: string
   startLocation: string
-  eventTime: string
+  v: string
   eventLink: string
 }) => {
-  const humanReadableTime = new Date(eventTime).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -41,7 +37,7 @@ const sendHourReminder = ({
                 </p>
                 <p style="font-size: 16px; color: #374151; line-height: 1.6; margin: 0;">
                   📍 <strong>Location:</strong> ${startLocation}<br/>
-                  🕒 <strong>Time:</strong> ${humanReadableTime}
+                  🕒 <strong>Time:</strong> ${eventTime}
                 </p>
                 <p style="font-size: 16px; color: #374151; line-height: 1.6; margin: 16px 0;">
                   Please try to arrive 10–15 minutes early to stretch and get a light warmup in with the group. If you're unable to attend, kindly unregister so we know who's coming.
