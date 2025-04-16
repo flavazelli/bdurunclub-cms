@@ -1,53 +1,64 @@
+# scripts/startup-script.tpl.sh
+
+# This script installs MongoDB, WireGuard, and sets up the VPN tunnel
+
 #!/bin/bash
 
-# MongoDB + Backup + Secure Setup Script
+# Install MongoDB and dependencies
+apt update
+apt install -y gnupg curl wireguard ufw
 
-ADMIN_USER="admin"
-ADMIN_PASS="${admin_password}"
-PROJECT_ID="${project_id}"
-
-# Install dependencies
-apt-get update
-apt-get install -y gnupg curl tar cron unzip google-cloud-sdk
-
-# Add MongoDB repo and install
+# MongoDB install
 curl -fsSL https://pgp.mongodb.com/server-6.0.asc | gpg -o /usr/share/keyrings/mongodb-server-6.0.gpg --dearmor
+
 echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" > /etc/apt/sources.list.d/mongodb-org-6.0.list
+apt update
+apt install -y mongodb-org
 
-apt-get update
-apt-get install -y mongodb-org
-
-# Enable MongoDB
-systemctl start mongod
 systemctl enable mongod
+systemctl start mongod
 
-# Create admin user
+# Setup MongoDB admin user
 mongosh <<EOF
 use admin
-db.createUser({user: "$ADMIN_USER", pwd: "$ADMIN_PASS", roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]})
+db.createUser({user: "admin", pwd: "${admin_password}", roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]})
 EOF
 
-# Enable auth
+# Enable auth and bind to localhost
 sed -i '/#security:/a\security:\n  authorization: enabled' /etc/mongod.conf
-
-# Bind only to localhost
 sed -i 's/bindIp: .*/bindIp: 127.0.0.1/' /etc/mongod.conf
-
 systemctl restart mongod
 
-# Create backup script
-cat <<EOB > /usr/local/bin/mongo-backup.sh
-#!/bin/bash
-TIMESTAMP=\$(date +%F-%H%M)
-BACKUP_DIR="/tmp/mongo-backup-\$TIMESTAMP"
-mkdir \$BACKUP_DIR
-mongodump --username admin --password '$ADMIN_PASS' --authenticationDatabase admin --out \$BACKUP_DIR
-tar -czf /tmp/mongo-\$TIMESTAMP.tar.gz -C /tmp mongo-backup-\$TIMESTAMP
-gsutil cp /tmp/mongo-\$TIMESTAMP.tar.gz gs://$PROJECT_ID-mongo-backups/
-rm -rf \$BACKUP_DIR /tmp/mongo-\$TIMESTAMP.tar.gz
-EOB
+# WireGuard Setup
+mkdir -p /etc/wireguard
+cd /etc/wireguard
 
-chmod +x /usr/local/bin/mongo-backup.sh
+# Generate server keys
+wg genkey | tee server_private.key | wg pubkey > server_public.key
+chmod 600 server_private.key
 
-# Add daily cron job
-(crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/mongo-backup.sh") | crontab -
+# Read generated keys
+SERVER_PRIVATE_KEY=$(cat server_private.key)
+
+# Create wg0.conf
+cat <<EOF > /etc/wireguard/wg0.conf
+[Interface]
+PrivateKey = \$SERVER_PRIVATE_KEY
+Address = 10.0.0.1/24
+ListenPort = 51820
+
+[Peer]
+PublicKey = ${client_public_key}
+AllowedIPs = 10.0.0.2/32
+EOF
+
+ufw allow 51820/udp
+
+# Enable IP forwarding
+sysctl -w net.ipv4.ip_forward=1
+
+# Start WireGuard
+systemctl enable wg-quick@wg0
+systemctl start wg-quick@wg0
+
+# End of startup script

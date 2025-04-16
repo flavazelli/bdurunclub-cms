@@ -24,6 +24,7 @@ resource "google_compute_instance" "mongodb" {
   metadata_startup_script = templatefile("${path.module}/scripts/startup-script.tpl.sh", {
     admin_password = var.admin_password
     project_id     = var.project_id
+    client_public_key = var.client_public_key
   })
 
   tags = ["mongodb"]
@@ -74,3 +75,15 @@ resource "google_compute_firewall" "deny-mongodb-port" {
 
   source_ranges = ["0.0.0.0/0"]
 }
+
+output "vm_ip" {
+  value = google_compute_instance.mongodb.network_interface[0].access_config[0].nat_ip
+} 
+
+# variables.tf additions
+
+variable "client_public_key" {
+  description = "WireGuard public key of the client"
+  type        = string
+}
+
