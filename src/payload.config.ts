@@ -156,29 +156,32 @@ export default buildConfig({
         retries: {
           shouldRestore: false,
         },
-        queue:'every15Mins'
+        queue:'every15Mins',
         handler: async ({ req }: { req: PayloadRequest }) => {
             const now = new Date();
-            const nextHour = new Date(now);
-            nextHour.setMinutes(0, 0, 0);
-            nextHour.setHours(nextHour.getHours() + 1);
+            const closestQuarterHour = new Date(now);
+            closestQuarterHour.setMinutes(Math.ceil(closestQuarterHour.getMinutes() / 15) * 15, 0, 0);
+
+            const endTime = new Date(closestQuarterHour);
+            endTime.setHours(endTime.getHours() + 1);
+            endTime.setMinutes(endTime.getMinutes() + 2);
 
             const events = await req.payload.find({
-            collection: 'events',
-            where: {
+              collection: 'events',
+              where: {
               and: [
-              {
+                {
                 eventTime: {
-                greater_than_equal: nextHour.toISOString(),
+                  greater_than_equal: closestQuarterHour.toISOString(),
                 },
-              },
-              {
+                },
+                {
                 eventTime: {
-                less_than: new Date(nextHour.getTime() + 60 * 60 * 1000).toISOString(),
+                  less_than: endTime.toISOString(),
                 },
-              },
+                },
               ],
-            },
+              },
             });
 
           for (const event of events.docs) {
