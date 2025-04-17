@@ -8,7 +8,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
-import sharp from 'sharp'
+import sharp, { queue } from 'sharp'
 
 import { Users } from './collections/Users'
 import { GPXFiles } from './collections/GPXFiles'
@@ -156,6 +156,7 @@ export default buildConfig({
         retries: {
           shouldRestore: false,
         },
+        queue:'every15Mins'
         handler: async ({ req }: { req: PayloadRequest }) => {
             const now = new Date();
             const nextHour = new Date(now);
@@ -328,9 +329,9 @@ export default buildConfig({
         limit: 100,
       },
       {
-        cron: '*/30 * * * *',
+        cron: '*/15 * * * *',
         limit: 100,
-        queue: 'everyHalfHour',
+        queue: 'every15Mins',
       },
       {
         cron: '0 * * * *',
