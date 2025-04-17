@@ -160,7 +160,7 @@ export default buildConfig({
         handler: async ({ req }: { req: PayloadRequest }) => {
             const now = new Date();
             const closestQuarterHour = new Date(now);
-            closestQuarterHour.setMinutes(Math.ceil(closestQuarterHour.getMinutes() / 15) * 15, 0, 0);
+            closestQuarterHour.setMinutes(Math.floor(closestQuarterHour.getMinutes() / 15) * 15, 0, 0);
             const closestQuarterHourOneHourLater = new Date(closestQuarterHour);
             closestQuarterHourOneHourLater.setHours(closestQuarterHourOneHourLater.getHours() + 1);
 
