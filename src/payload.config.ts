@@ -161,10 +161,11 @@ export default buildConfig({
             const now = new Date();
             const closestQuarterHour = new Date(now);
             closestQuarterHour.setMinutes(Math.ceil(closestQuarterHour.getMinutes() / 15) * 15, 0, 0);
+            const closestQuarterHourOneHourLater = new Date(closestQuarterHour);
+            closestQuarterHourOneHourLater.setHours(closestQuarterHourOneHourLater.getHours() + 1);
 
-            const endTime = new Date(closestQuarterHour);
-            endTime.setHours(endTime.getHours() + 1);
-            endTime.setMinutes(endTime.getMinutes() + 2);
+            const closestQuarterHourOneHourLaterAddMinute = new Date(closestQuarterHourOneHourLater);
+            closestQuarterHourOneHourLaterAddMinute.setMinutes(closestQuarterHourOneHourLaterAddMinute.getMinutes() + 1);
 
             const events = await req.payload.find({
               collection: 'events',
@@ -172,12 +173,12 @@ export default buildConfig({
               and: [
                 {
                 eventTime: {
-                  greater_than_equal: closestQuarterHour.toISOString(),
+                  greater_than_equal: closestQuarterHourOneHourLater.toISOString(),
                 },
                 },
                 {
                 eventTime: {
-                  less_than: endTime.toISOString(),
+                  less_than: closestQuarterHourOneHourLaterAddMinute.toISOString(),
                 },
                 },
               ],
