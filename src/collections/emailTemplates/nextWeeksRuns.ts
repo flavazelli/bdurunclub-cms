@@ -3,11 +3,11 @@
 export function nextWeekRunsEmail(runs) {
     const runItems = runs
       .map(
-        (run) => `
-        <li style="margin-bottom: 12px;">
-          <strong> ${run.title}</strong><br/>
-          📍 <strong>Location:</strong> ${run.startingLocation  }<br/>
-          🕒 <strong>Time:</strong> ${new Date(run.eventTime).toLocaleString('en-US', {
+      (run) => `
+      <li style="margin-bottom: 12px;">
+        <strong> ${run.title}</strong><br/>
+        📍 <strong>Location:</strong> ${run.startingLocation}<br/>
+        🕒 <strong>Time:</strong> ${new Date(run.eventTime).toLocaleString('en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -15,9 +15,10 @@ export function nextWeekRunsEmail(runs) {
             hour: '2-digit',
             minute: '2-digit',
             hour12: true,
-          })}<br/>
-          <a href="${process.env.CLIENT_URL}/events/${run.id}" style="color: #15803d; text-decoration: underline;">View Details</a>
-        </li>
+            timeZone: 'America/Toronto',
+        })}<br/>
+        <a href="${process.env.CLIENT_URL}/events/${run.id}" style="color: #15803d; text-decoration: underline;">View Details</a>
+      </li>
       `
       )
       .join('');

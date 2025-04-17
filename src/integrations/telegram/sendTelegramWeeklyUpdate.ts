@@ -23,6 +23,7 @@ export function formatNextWeekRunsTelegramMessage(runs: any[]): string {
 
       const dateStr = escapeHtml(
         new Date(run.eventTime).toLocaleString('en-US', {
+          timeZone: 'America/Toronto',
           weekday: 'long',
           year: 'numeric',
           month: 'long',

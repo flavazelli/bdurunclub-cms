@@ -1,6 +1,9 @@
 // storage-adapter-import-placeholder
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
+import type { PayloadRequest, TaskConfig, WorkflowConfig } from 'payload'
+import { gcsStorage } from '@payloadcms/storage-gcs'
+
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -11,12 +14,10 @@ import { Users } from './collections/Users'
 import { GPXFiles } from './collections/GPXFiles'
 import { Events } from './collections/Events'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
-import type { PayloadRequest, TaskConfig, WorkflowConfig } from 'payload'
 
 import confirmRegistration from './collections/emailTemplates/confirmRegistration'
 import sendHourReminder from './collections/emailTemplates/sendHourReminder'
 import { v4 as uuidv4 } from 'uuid'
-import { gcsStorage } from '@payloadcms/storage-gcs'
 import { nextWeekRunsEmail } from './collections/emailTemplates/nextWeeksRuns'
 import { sendTelegramWeeklyUpdate } from '@/integrations/telegram/sendTelegramWeeklyUpdate'
 
@@ -126,6 +127,7 @@ export default buildConfig({
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit',
+              timeZone: 'America/Toronto',
             });
 
           const url = `${process.env.CLIENT_URL}/events/${event.id}`;
