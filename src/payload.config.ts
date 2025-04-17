@@ -166,7 +166,25 @@ export default buildConfig({
 
             const closestQuarterHourOneHourLaterAddMinute = new Date(closestQuarterHourOneHourLater);
             closestQuarterHourOneHourLaterAddMinute.setMinutes(closestQuarterHourOneHourLaterAddMinute.getMinutes() + 1);
-
+            console.log('Closest quarter hour + 1 hour:', closestQuarterHourOneHourLater.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              timeZone: 'America/Toronto',
+            }));
+            console.log('Closest quarter hour + 1 hour + 1 minute:', closestQuarterHourOneHourLaterAddMinute.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              timeZone: 'America/Toronto',
+            }));
+ 
             const events = await req.payload.find({
               collection: 'events',
               where: {
@@ -184,6 +202,8 @@ export default buildConfig({
               ],
               },
             });
+
+          console.log('Events to send reminder for:', events.docs)
 
           for (const event of events.docs) {
             for (const user of event.registeredUsers) {
