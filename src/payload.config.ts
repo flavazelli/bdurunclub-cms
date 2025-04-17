@@ -29,10 +29,13 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    timezones: {
+      defaultTimezone: 'America/Toronto',
+    }
   },
   serverURL: process.env.SERVER_URL || 'http://localhost:3000',
-  cors: [process.env.CLIENT_URL || 'http://localhost:5173'],
-  csrf: [process.env.CLIENT_URL || 'http://localhost:5173'],
+  cors: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:4173'],
+  csrf: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:4173'],
   collections: [Users, Events, GPXFiles],
   editor: lexicalEditor(),
   email: nodemailerAdapter({
@@ -116,14 +119,14 @@ export default buildConfig({
             id: input.eventId,
           });
 
-          const eventDate = new Date(event.eventTime ?? '').toLocaleString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          });
+            const eventDate = new Date(event.eventTime ?? '').toLocaleString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
 
           const url = `${process.env.CLIENT_URL}/events/${event.id}`;
 
@@ -281,7 +284,7 @@ export default buildConfig({
             subject: 'New Runs Published for Next Week',
             html: nextWeekRunsEmail(events.docs),
           });
-
+          //send telegram message to the channel
           await sendTelegramWeeklyUpdate(events.docs);
 
           return {
