@@ -93,6 +93,9 @@ export default buildConfig({
           },
         })
 
+        console.log('Events to publish:', events.docs)
+        // If there are no events to publish, return early
+
         if (events.totalDocs === 0) {
           return new Response('ok', { status: 200 })
         }
