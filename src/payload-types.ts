@@ -98,7 +98,6 @@ export interface Config {
     tasks: {
       sendConfirmationEmail: TaskSendConfirmationEmail;
       sendReminderOneHourBeforeEventStart: TaskSendReminderOneHourBeforeEventStart;
-      publishNextWeeksRuns: TaskPublishNextWeeksRuns;
       inline: {
         input: unknown;
         output: unknown;
@@ -267,7 +266,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'sendConfirmationEmail' | 'sendReminderOneHourBeforeEventStart' | 'publishNextWeeksRuns';
+        taskSlug: 'inline' | 'sendConfirmationEmail' | 'sendReminderOneHourBeforeEventStart';
         taskID: string;
         input?:
           | {
@@ -301,9 +300,7 @@ export interface PayloadJob {
       }[]
     | null;
   workflowSlug?: 'sendEmailToConfirmRun' | null;
-  taskSlug?:
-    | ('inline' | 'sendConfirmationEmail' | 'sendReminderOneHourBeforeEventStart' | 'publishNextWeeksRuns')
-    | null;
+  taskSlug?: ('inline' | 'sendConfirmationEmail' | 'sendReminderOneHourBeforeEventStart') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -511,14 +508,6 @@ export interface TaskSendConfirmationEmail {
  * via the `definition` "TaskSendReminderOneHourBeforeEventStart".
  */
 export interface TaskSendReminderOneHourBeforeEventStart {
-  input?: unknown;
-  output?: unknown;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "TaskPublishNextWeeksRuns".
- */
-export interface TaskPublishNextWeeksRuns {
   input?: unknown;
   output?: unknown;
 }
