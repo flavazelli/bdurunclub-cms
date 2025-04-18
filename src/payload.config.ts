@@ -32,7 +32,7 @@ export default buildConfig({
     },
     timezones: {
       defaultTimezone: 'America/Toronto',
-    }
+    },
   },
   serverURL: process.env.SERVER_URL || 'http://localhost:3000',
   cors: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:4173'],
@@ -45,7 +45,7 @@ export default buildConfig({
     transportOptions: {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
-      auth: { 
+      auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
@@ -58,18 +58,18 @@ export default buildConfig({
       handler: async (req) => {
         const authHeader = req.headers.get('authorization')
         if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-          return new Response('Unauthorized', {status: 401})
+          return new Response('Unauthorized', { status: 401 })
         }
 
         try {
-          const now = new Date();
-          const nextMonday = new Date(now);
-          nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7));
-          nextMonday.setHours(0, 0, 0, 0);
+          const now = new Date()
+          const nextMonday = new Date(now)
+          nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7))
+          nextMonday.setHours(0, 0, 0, 0)
 
-          const nextSunday = new Date(nextMonday);
-          nextSunday.setDate(nextMonday.getDate() + 6);
-          nextSunday.setHours(23, 59, 59, 999);
+          const nextSunday = new Date(nextMonday)
+          nextSunday.setDate(nextMonday.getDate() + 6)
+          nextSunday.setHours(23, 59, 59, 999)
 
           const events = await req.payload.find({
             collection: 'events',
@@ -88,14 +88,14 @@ export default buildConfig({
                 {
                   visible: {
                     equals: false,
-                  }
-                }
+                  },
+                },
               ],
-            }
-          });
+            },
+          })
 
           if (events.totalDocs === 0) {
-            return new Response('ok', {status: 200})
+            return new Response('ok', { status: 200 })
           }
 
           //publish the events
@@ -116,8 +116,8 @@ export default buildConfig({
                 {
                   visible: {
                     equals: false,
-                  }
-                }
+                  },
+                },
               ],
             },
             data: {
@@ -126,104 +126,110 @@ export default buildConfig({
           })
 
           const users = await req.payload.find({
-            collection: 'users'
-          });
+            collection: 'users',
+          })
           //send email to all users
           await req.payload.sendEmail({
-            bcc: users.docs.map(user => user.email).join(','),
+            bcc: users.docs.map((user) => user.email).join(','),
             subject: 'New Runs Published for Next Week',
             html: nextWeekRunsEmail(events.docs),
-          });
+          })
           //send telegram message to the channel
-          await sendTelegramWeeklyUpdate(events.docs);
-
-        }
-        catch (error) { 
+          await sendTelegramWeeklyUpdate(events.docs)
+        } catch (error) {
           return Response.json({
             message: 'unable to process the request',
             error: error,
             status: 500,
           })
         }
-      }
-    }, 
-    { 
+      },
+    },
+    {
       path: '/send-hour-reminder',
       method: 'get',
       handler: async (req) => {
         const authHeader = req.headers.get('authorization')
         if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-          return Response.json({ message: 'not authenticated' }, {status: 401 })
+          return Response.json({ message: 'not authenticated' }, { status: 401 })
         }
 
-        const now = new Date();
-        const closestQuarterHour = new Date(now);
-        closestQuarterHour.setMinutes(Math.floor(closestQuarterHour.getMinutes() / 15) * 15, 0, 0);
-        const closestQuarterHourOneHourLater = new Date(closestQuarterHour);
-        closestQuarterHourOneHourLater.setHours(closestQuarterHourOneHourLater.getHours() + 1);
+        const now = new Date()
+        const closestQuarterHour = new Date(now)
+        closestQuarterHour.setMinutes(Math.floor(closestQuarterHour.getMinutes() / 15) * 15, 0, 0)
+        const closestQuarterHourOneHourLater = new Date(closestQuarterHour)
+        closestQuarterHourOneHourLater.setHours(closestQuarterHourOneHourLater.getHours() + 1)
 
-        const closestQuarterHourOneHourLaterAddMinute = new Date(closestQuarterHourOneHourLater);
-        closestQuarterHourOneHourLaterAddMinute.setMinutes(closestQuarterHourOneHourLaterAddMinute.getMinutes() + 1);
-        console.log('Closest quarter hour + 1 hour:', closestQuarterHourOneHourLater.toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'America/Toronto',
-        }));
-        console.log('Closest quarter hour + 1 hour + 1 minute:', closestQuarterHourOneHourLaterAddMinute.toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'America/Toronto',
-        }));
+        const closestQuarterHourOneHourLaterAddMinute = new Date(closestQuarterHourOneHourLater)
+        closestQuarterHourOneHourLaterAddMinute.setMinutes(
+          closestQuarterHourOneHourLaterAddMinute.getMinutes() + 1,
+        )
+        console.log(
+          'Closest quarter hour + 1 hour:',
+          closestQuarterHourOneHourLater.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'America/Toronto',
+          }),
+        )
+        console.log(
+          'Closest quarter hour + 1 hour + 1 minute:',
+          closestQuarterHourOneHourLaterAddMinute.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'America/Toronto',
+          }),
+        )
 
         const events = await req.payload.find({
           collection: 'events',
           where: {
-          and: [
-            {
-            eventTime: {
-              greater_than_equal: closestQuarterHourOneHourLater.toISOString(),
-            },
-            },
-            {
-            eventTime: {
-              less_than: closestQuarterHourOneHourLaterAddMinute.toISOString(),
-            },
-            },
-          ],
+            and: [
+              {
+                eventTime: {
+                  greater_than_equal: closestQuarterHourOneHourLater.toISOString(),
+                },
+              },
+              {
+                eventTime: {
+                  less_than: closestQuarterHourOneHourLaterAddMinute.toISOString(),
+                },
+              },
+            ],
           },
-        });
+        })
 
-      console.log('Events to send reminder for:', events.docs)
+        console.log('Events to send reminder for:', events.docs)
 
-      for (const event of events.docs) {
-        for (const user of event.registeredUsers) {
-          await req.payload.sendEmail({
-            to: user.email,
-            subject: `${event.title} starts in an hour!`,
-            html: sendHourReminder({
-              firstName: user.firstName,
-              eventTitle: event.title,
-              eventTime: event.eventTime,
-              startLocation: event.startingLocation,
-              eventLink: `${process.env.CLIENT_URL}/events/${event.id}`,
-            }),
-          });
+        for (const event of events.docs) {
+          for (const user of event.registeredUsers) {
+            await req.payload.sendEmail({
+              to: user.email,
+              subject: `${event.title} starts in an hour!`,
+              html: sendHourReminder({
+                firstName: user.firstName,
+                eventTitle: event.title,
+                eventTime: event.eventTime,
+                startLocation: event.startingLocation,
+                eventLink: `${process.env.CLIENT_URL}/events/${event.id}`,
+              }),
+            })
+          }
         }
-      }
 
-      return Response.json({
-        message: 'Emails sent successfully'
-      });
+        return Response.json({
+          message: 'Emails sent successfully',
+        })
+      },
     },
-    }
   ],
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -233,7 +239,8 @@ export default buildConfig({
     url: process.env.DATABASE_URI || '',
     connectOptions: {
       dbName: process.env.DATABASE_NAME || 'bdurunclub',
-    }}),
+    },
+  }),
   sharp,
   plugins: [
     payloadCloudPlugin(),
@@ -283,28 +290,34 @@ export default buildConfig({
             type: 'boolean',
           },
         ],
-        handler: async ({ input, req }: { input: { userId: string; eventId: string }; req: PayloadRequest }) => {
+        handler: async ({
+          input,
+          req,
+        }: {
+          input: { userId: string; eventId: string }
+          req: PayloadRequest
+        }) => {
           const user = await req.payload.findByID({
             collection: 'users',
             id: input.userId,
-          });
+          })
 
           const event = await req.payload.findByID({
             collection: 'events',
             id: input.eventId,
-          });
+          })
 
-            const eventDate = new Date(event.eventTime ?? '').toLocaleString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              timeZone: 'America/Toronto',
-            });
+          const eventDate = new Date(event.eventTime ?? '').toLocaleString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'America/Toronto',
+          })
 
-          const url = `${process.env.CLIENT_URL}/events/${event.id}`;
+          const url = `${process.env.CLIENT_URL}/events/${event.id}`
 
           await req.payload.sendEmail({
             to: user.email,
@@ -316,13 +329,13 @@ export default buildConfig({
               eventLocation: event.startingLocation ?? 'Location not specified',
               eventLink: url,
             }),
-          });
+          })
 
           return {
             output: {
               success: true,
             },
-          };
+          }
         },
       } as unknown as TaskConfig<'sendConfirmationEmail'>,
     ],
@@ -347,7 +360,7 @@ export default buildConfig({
               userId: job.input.userId,
               eventId: job.input.eventId,
             },
-          });
+          })
         },
       } as WorkflowConfig<'sendEmailToConfirmRun'>,
     ],
@@ -367,7 +380,7 @@ export default buildConfig({
       },
     ],
     shouldAutoRun: async () => {
-      return process.env.NODE_ENV === 'development';
+      return process.env.NODE_ENV === 'development'
     },
-  }
-});
+  },
+})

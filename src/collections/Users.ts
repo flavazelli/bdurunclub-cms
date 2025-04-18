@@ -19,8 +19,8 @@ export const Users: CollectionConfig = {
       sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'Lax',
     },
     verify: {
-      generateEmailHTML: ({token}) => verifyEmailTemplate({ token })
-    }
+      generateEmailHTML: ({ token }) => verifyEmailTemplate({ token }),
+    },
   },
   admin: {
     useAsTitle: 'email',
@@ -58,15 +58,14 @@ export const Users: CollectionConfig = {
           label: 'Member',
           value: 'member',
         },
-        
       ],
       defaultValue: 'member',
       access: {
         read: admins,
       },
-    }, 
+    },
     {
-      name: 'level', 
+      name: 'level',
       type: 'select',
       hasMany: false,
       options: [
@@ -86,30 +85,30 @@ export const Users: CollectionConfig = {
       access: {
         read: authenticated,
       },
-    }, 
+    },
     {
-      name: 'bduResident', 
+      name: 'bduResident',
       type: 'checkbox',
       access: {
         read: adminsAndUser,
       },
-    }, 
+    },
     {
-      name:'pace',
-      type: 'select', 
+      name: 'pace',
+      type: 'select',
       options: Array.from({ length: 25 }, (_, i) => {
-        const minutes = 4 + Math.floor(i * 10 / 60);
-        const seconds = (i * 10) % 60;
-        const time = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        const minutes = 4 + Math.floor((i * 10) / 60)
+        const seconds = (i * 10) % 60
+        const time = `${minutes}:${seconds.toString().padStart(2, '0')}`
         return {
           label: time,
-          value: time
+          value: time,
         }
-      }), 
+      }),
       access: {
         read: adminsAndUser,
       },
-    }
+    },
   ],
   endpoints: [
     {
@@ -137,19 +136,19 @@ export const Users: CollectionConfig = {
           where: {
             and: [
               {
-          registeredUsers: {
-            equals: user.id,
-          },
+                registeredUsers: {
+                  equals: user.id,
+                },
               },
               {
-          eventTime: {
-            greater_than: new Date(),
-          },
+                eventTime: {
+                  greater_than: new Date(),
+                },
               },
               {
-          visible: {
-            equals: true,
-          },
+                visible: {
+                  equals: true,
+                },
               },
             ],
           },
@@ -184,6 +183,5 @@ export const Users: CollectionConfig = {
         }
       },
     ],
-
   },
 }

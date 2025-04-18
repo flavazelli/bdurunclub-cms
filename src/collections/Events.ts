@@ -16,15 +16,15 @@ export const Events: CollectionConfig = {
               visible: {
                 equals: true,
               },
-            }
+            },
           ],
         }
       } else if (req.user.roles.includes('admin')) {
-          return true
+        return true
       }
 
       return false
-    }
+    },
   },
   fields: [
     {
@@ -47,7 +47,7 @@ export const Events: CollectionConfig = {
       },
     },
     {
-      name:'visible', 
+      name: 'visible',
       type: 'checkbox',
       defaultValue: false,
       access: {
@@ -209,8 +209,7 @@ export const Events: CollectionConfig = {
           data: {
             registeredUsers: [req.user.id, ...(event?.registeredUsers || [])],
           },
-        });
-
+        })
 
         await req.payload.jobs.queue({
           // Pass the name of the workflow
