@@ -135,7 +135,7 @@ export default buildConfig({
         await sendTelegramWeeklyUpdate(events.docs)
         //send email to all users
         await req.payload.sendEmail({
-          bcc: users.docs.map((user) => user.email).join(','),
+          to: users.docs.map((user) => user.email).join(','),
           subject: 'New Runs Published for Next Week',
           html: nextWeekRunsEmail(events.docs),
         })
