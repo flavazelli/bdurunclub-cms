@@ -85,8 +85,8 @@ export const Events: CollectionConfig = {
         read: authenticated,
       },
       relationTo: 'users',
-      hasMany: true,
-      unique: true,
+      defaultValue: [],
+      hasMany: true
     },
   ],
   endpoints: [
