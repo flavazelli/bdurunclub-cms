@@ -14,5 +14,5 @@ export const GPXFiles: CollectionConfig = {
   ],
   upload: {
     mimeTypes: ['application/octet-stream'],
-  }
+  },
 }
