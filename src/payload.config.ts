@@ -51,6 +51,180 @@ export default buildConfig({
       },
     },
   }),
+  endpoints: [
+    {
+      path: '/publish-next-weeks-runs',
+      method: 'get',
+      handler: async (req) => {
+        const authHeader = req.headers.get('authorization')
+        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+          return new Response('Unauthorized', {status: 401})
+        }
+
+        try {
+          const now = new Date();
+          const nextMonday = new Date(now);
+          nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7));
+          nextMonday.setHours(0, 0, 0, 0);
+
+          const nextSunday = new Date(nextMonday);
+          nextSunday.setDate(nextMonday.getDate() + 6);
+          nextSunday.setHours(23, 59, 59, 999);
+
+          const events = await req.payload.find({
+            collection: 'events',
+            where: {
+              and: [
+                {
+                  eventTime: {
+                    greater_than_equal: nextMonday.toISOString(),
+                  },
+                },
+                {
+                  eventTime: {
+                    less_than_equal: nextSunday.toISOString(),
+                  },
+                },
+                {
+                  visible: {
+                    equals: false,
+                  }
+                }
+              ],
+            }
+          });
+
+          if (events.totalDocs === 0) {
+            return new Response('ok', {status: 200})
+          }
+
+          //publish the events
+          await req.payload.update({
+            collection: 'events',
+            where: {
+              and: [
+                {
+                  eventTime: {
+                    greater_than_equal: nextMonday.toISOString(),
+                  },
+                },
+                {
+                  eventTime: {
+                    less_than_equal: nextSunday.toISOString(),
+                  },
+                },
+                {
+                  visible: {
+                    equals: false,
+                  }
+                }
+              ],
+            },
+            data: {
+              visible: true,
+            },
+          })
+
+          const users = await req.payload.find({
+            collection: 'users'
+          });
+          //send email to all users
+          await req.payload.sendEmail({
+            bcc: users.docs.map(user => user.email).join(','),
+            subject: 'New Runs Published for Next Week',
+            html: nextWeekRunsEmail(events.docs),
+          });
+          //send telegram message to the channel
+          await sendTelegramWeeklyUpdate(events.docs);
+
+        }
+        catch (error) { 
+          return Response.json({
+            message: 'unable to process the request',
+            error: error,
+            status: 500,
+          })
+        }
+      }
+    }, 
+    { 
+      path: '/send-hour-reminder',
+      method: 'get',
+      handler: async (req) => {
+        const authHeader = req.headers.get('authorization')
+        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+          return Response.json({ message: 'not authenticated' }, {status: 401 })
+        }
+
+        const now = new Date();
+        const closestQuarterHour = new Date(now);
+        closestQuarterHour.setMinutes(Math.floor(closestQuarterHour.getMinutes() / 15) * 15, 0, 0);
+        const closestQuarterHourOneHourLater = new Date(closestQuarterHour);
+        closestQuarterHourOneHourLater.setHours(closestQuarterHourOneHourLater.getHours() + 1);
+
+        const closestQuarterHourOneHourLaterAddMinute = new Date(closestQuarterHourOneHourLater);
+        closestQuarterHourOneHourLaterAddMinute.setMinutes(closestQuarterHourOneHourLaterAddMinute.getMinutes() + 1);
+        console.log('Closest quarter hour + 1 hour:', closestQuarterHourOneHourLater.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'America/Toronto',
+        }));
+        console.log('Closest quarter hour + 1 hour + 1 minute:', closestQuarterHourOneHourLaterAddMinute.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'America/Toronto',
+        }));
+
+        const events = await req.payload.find({
+          collection: 'events',
+          where: {
+          and: [
+            {
+            eventTime: {
+              greater_than_equal: closestQuarterHourOneHourLater.toISOString(),
+            },
+            },
+            {
+            eventTime: {
+              less_than: closestQuarterHourOneHourLaterAddMinute.toISOString(),
+            },
+            },
+          ],
+          },
+        });
+
+      console.log('Events to send reminder for:', events.docs)
+
+      for (const event of events.docs) {
+        for (const user of event.registeredUsers) {
+          await req.payload.sendEmail({
+            to: user.email,
+            subject: `${event.title} starts in an hour!`,
+            html: sendHourReminder({
+              firstName: user.firstName,
+              eventTitle: event.title,
+              eventTime: event.eventTime,
+              startLocation: event.startingLocation,
+              eventLink: `${process.env.CLIENT_URL}/events/${event.id}`,
+            }),
+          });
+        }
+      }
+
+      return Response.json({
+        message: 'Emails sent successfully'
+      });
+    },
+    }
+  ],
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
@@ -151,176 +325,6 @@ export default buildConfig({
           };
         },
       } as unknown as TaskConfig<'sendConfirmationEmail'>,
-      {
-        slug: 'sendReminderOneHourBeforeEventStart',
-        retries: {
-          shouldRestore: false,
-        },
-        queue:'every15Mins',
-        handler: async ({ req }: { req: PayloadRequest }) => {
-            const now = new Date();
-            const closestQuarterHour = new Date(now);
-            closestQuarterHour.setMinutes(Math.floor(closestQuarterHour.getMinutes() / 15) * 15, 0, 0);
-            const closestQuarterHourOneHourLater = new Date(closestQuarterHour);
-            closestQuarterHourOneHourLater.setHours(closestQuarterHourOneHourLater.getHours() + 1);
-
-            const closestQuarterHourOneHourLaterAddMinute = new Date(closestQuarterHourOneHourLater);
-            closestQuarterHourOneHourLaterAddMinute.setMinutes(closestQuarterHourOneHourLaterAddMinute.getMinutes() + 1);
-            console.log('Closest quarter hour + 1 hour:', closestQuarterHourOneHourLater.toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              timeZone: 'America/Toronto',
-            }));
-            console.log('Closest quarter hour + 1 hour + 1 minute:', closestQuarterHourOneHourLaterAddMinute.toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              timeZone: 'America/Toronto',
-            }));
- 
-            const events = await req.payload.find({
-              collection: 'events',
-              where: {
-              and: [
-                {
-                eventTime: {
-                  greater_than_equal: closestQuarterHourOneHourLater.toISOString(),
-                },
-                },
-                {
-                eventTime: {
-                  less_than: closestQuarterHourOneHourLaterAddMinute.toISOString(),
-                },
-                },
-              ],
-              },
-            });
-
-          console.log('Events to send reminder for:', events.docs)
-
-          for (const event of events.docs) {
-            for (const user of event.registeredUsers) {
-              await req.payload.sendEmail({
-                to: user.email,
-                subject: `${event.title} starts in an hour!`,
-                html: sendHourReminder({
-                  firstName: user.firstName,
-                  eventTitle: event.title,
-                  eventTime: event.eventTime,
-                  startLocation: event.startingLocation,
-                  eventLink: `${process.env.CLIENT_URL}/events/${event.id}`,
-                }),
-              });
-            }
-          }
-
-          return {
-            output: {
-              success: true,
-            },
-          };
-        },
-      } as unknown as TaskConfig<'sendReminderOneHourBeforeEventStart'>,
-      {
-        slug: 'publishNextWeeksRuns',
-        retries: {
-          shouldRestore: false,
-        },
-        queue: 'thursdaysat7pm',
-        handler: async ({ req }: { req: PayloadRequest }) => {
-          const now = new Date();
-          const nextMonday = new Date(now);
-          nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7));
-          nextMonday.setHours(0, 0, 0, 0);
-
-          const nextSunday = new Date(nextMonday);
-          nextSunday.setDate(nextMonday.getDate() + 6);
-          nextSunday.setHours(23, 59, 59, 999);
-
-          const events = await req.payload.find({
-            collection: 'events',
-            where: {
-              and: [
-                {
-                  eventTime: {
-                    greater_than_equal: nextMonday.toISOString(),
-                  },
-                },
-                {
-                  eventTime: {
-                    less_than_equal: nextSunday.toISOString(),
-                  },
-                },
-                {
-                  visible: {
-                    equals: false,
-                  }
-                }
-              ],
-            }
-          });
-
-          if (events.totalDocs === 0) {
-            return {
-              output: {
-                success: true,
-              },
-            };
-          }
-
-          //publish the events
-          await req.payload.update({
-            collection: 'events',
-            where: {
-              and: [
-                {
-                  eventTime: {
-                    greater_than_equal: nextMonday.toISOString(),
-                  },
-                },
-                {
-                  eventTime: {
-                    less_than_equal: nextSunday.toISOString(),
-                  },
-                },
-                {
-                  visible: {
-                    equals: false,
-                  }
-                }
-              ],
-            },
-            data: {
-              visible: true,
-            },
-          })
-
-          const users = await req.payload.find({
-            collection: 'users'
-          });
-          //send email to all users
-          await req.payload.sendEmail({
-            bcc: users.docs.map(user => user.email).join(','),
-            subject: 'New Runs Published for Next Week',
-            html: nextWeekRunsEmail(events.docs),
-          });
-          //send telegram message to the channel
-          await sendTelegramWeeklyUpdate(events.docs);
-
-          return {
-            output: {
-              success: true,
-            },
-          };
-        },
-      } as unknown as TaskConfig<'publishNextWeeksRuns'>,
     ],
     workflows: [
       {
@@ -365,15 +369,5 @@ export default buildConfig({
     shouldAutoRun: async () => {
       return process.env.NODE_ENV === 'development';
     },
-  },
-  onInit: async (payload) => {
-    await payload.jobs.queue({
-      task: 'sendReminderOneHourBeforeEventStart',
-      input: {},
-    });
-    await payload.jobs.queue({
-      task: 'publishNextWeeksRuns',
-      input: {},
-    });
-  },
+  }
 });
