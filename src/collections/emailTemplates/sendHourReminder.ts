@@ -14,6 +14,7 @@ const sendHourReminder = ({
   const humanReadableTime = new Date(eventTime).toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'America/Toronto',
   })
   return `<!DOCTYPE html>
 <html lang="en">
