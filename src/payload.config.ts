@@ -51,6 +51,8 @@ export default buildConfig({
       },
     },
   }),
+<<<<<<< Updated upstream
+=======
   endpoints: [
     {
       path: '/publish-next-weeks-runs',
@@ -61,7 +63,6 @@ export default buildConfig({
           return new Response('Unauthorized', { status: 401 })
         }
 
-        try {
           const now = new Date()
           const nextMonday = new Date(now)
           nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7))
@@ -128,21 +129,15 @@ export default buildConfig({
           const users = await req.payload.find({
             collection: 'users',
           })
+
+          //send telegram message to the channel
+          await sendTelegramWeeklyUpdate(events.docs)
           //send email to all users
           await req.payload.sendEmail({
             bcc: users.docs.map((user) => user.email).join(','),
             subject: 'New Runs Published for Next Week',
             html: nextWeekRunsEmail(events.docs),
           })
-          //send telegram message to the channel
-          await sendTelegramWeeklyUpdate(events.docs)
-        } catch (error) {
-          return Response.json({
-            message: 'unable to process the request',
-            error: error,
-            status: 500,
-          })
-        }
       },
     },
     {
@@ -231,6 +226,7 @@ export default buildConfig({
       },
     },
   ],
+>>>>>>> Stashed changes
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
