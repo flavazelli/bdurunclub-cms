@@ -51,8 +51,6 @@ export default buildConfig({
       },
     },
   }),
-<<<<<<< Updated upstream
-=======
   endpoints: [
     {
       path: '/publish-next-weeks-runs',
@@ -63,81 +61,81 @@ export default buildConfig({
           return new Response('Unauthorized', { status: 401 })
         }
 
-          const now = new Date()
-          const nextMonday = new Date(now)
-          nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7))
-          nextMonday.setHours(0, 0, 0, 0)
+        const now = new Date()
+        const nextMonday = new Date(now)
+        nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7))
+        nextMonday.setHours(0, 0, 0, 0)
 
-          const nextSunday = new Date(nextMonday)
-          nextSunday.setDate(nextMonday.getDate() + 6)
-          nextSunday.setHours(23, 59, 59, 999)
+        const nextSunday = new Date(nextMonday)
+        nextSunday.setDate(nextMonday.getDate() + 6)
+        nextSunday.setHours(23, 59, 59, 999)
 
-          const events = await req.payload.find({
-            collection: 'events',
-            where: {
-              and: [
-                {
-                  eventTime: {
-                    greater_than_equal: nextMonday.toISOString(),
-                  },
+        const events = await req.payload.find({
+          collection: 'events',
+          where: {
+            and: [
+              {
+                eventTime: {
+                  greater_than_equal: nextMonday.toISOString(),
                 },
-                {
-                  eventTime: {
-                    less_than_equal: nextSunday.toISOString(),
-                  },
+              },
+              {
+                eventTime: {
+                  less_than_equal: nextSunday.toISOString(),
                 },
-                {
-                  visible: {
-                    equals: false,
-                  },
+              },
+              {
+                visible: {
+                  equals: false,
                 },
-              ],
-            },
-          })
+              },
+            ],
+          },
+        })
 
-          if (events.totalDocs === 0) {
-            return new Response('ok', { status: 200 })
-          }
+        if (events.totalDocs === 0) {
+          return new Response('ok', { status: 200 })
+        }
 
-          //publish the events
-          await req.payload.update({
-            collection: 'events',
-            where: {
-              and: [
-                {
-                  eventTime: {
-                    greater_than_equal: nextMonday.toISOString(),
-                  },
+        //publish the events
+        await req.payload.update({
+          collection: 'events',
+          where: {
+            and: [
+              {
+                eventTime: {
+                  greater_than_equal: nextMonday.toISOString(),
                 },
-                {
-                  eventTime: {
-                    less_than_equal: nextSunday.toISOString(),
-                  },
+              },
+              {
+                eventTime: {
+                  less_than_equal: nextSunday.toISOString(),
                 },
-                {
-                  visible: {
-                    equals: false,
-                  },
+              },
+              {
+                visible: {
+                  equals: false,
                 },
-              ],
-            },
-            data: {
-              visible: true,
-            },
-          })
+              },
+            ],
+          },
+          data: {
+            visible: true,
+          },
+        })
 
-          const users = await req.payload.find({
-            collection: 'users',
-          })
+        const users = await req.payload.find({
+          collection: 'users',
+        })
 
-          //send telegram message to the channel
-          await sendTelegramWeeklyUpdate(events.docs)
-          //send email to all users
-          await req.payload.sendEmail({
-            bcc: users.docs.map((user) => user.email).join(','),
-            subject: 'New Runs Published for Next Week',
-            html: nextWeekRunsEmail(events.docs),
-          })
+        //send telegram message to the channel
+        await sendTelegramWeeklyUpdate(events.docs)
+        //send email to all users
+        await req.payload.sendEmail({
+          bcc: users.docs.map((user) => user.email).join(','),
+          subject: 'New Runs Published for Next Week',
+          html: nextWeekRunsEmail(events.docs),
+        })
       },
     },
     {
@@ -226,7 +224,6 @@ export default buildConfig({
       },
     },
   ],
->>>>>>> Stashed changes
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
