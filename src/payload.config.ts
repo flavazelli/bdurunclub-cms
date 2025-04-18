@@ -20,7 +20,6 @@ import sendHourReminder from './collections/emailTemplates/sendHourReminder'
 import { v4 as uuidv4 } from 'uuid'
 import { nextWeekRunsEmail } from './collections/emailTemplates/nextWeeksRuns'
 import { sendTelegramWeeklyUpdate } from '@/integrations/telegram/sendTelegramWeeklyUpdate'
-import { stat } from 'fs'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
