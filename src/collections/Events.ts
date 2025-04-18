@@ -4,6 +4,7 @@ import { headersWithCors } from 'payload'
 import { anyone } from './access/anyone'
 import { authenticated } from './access/authenticated'
 import { admins } from './access/admins'
+import { stat } from 'fs'
 
 export const Events: CollectionConfig = {
   slug: 'events',
@@ -86,7 +87,7 @@ export const Events: CollectionConfig = {
       },
       relationTo: 'users',
       defaultValue: [],
-      hasMany: true
+      hasMany: true,
     },
   ],
   endpoints: [
@@ -95,32 +96,24 @@ export const Events: CollectionConfig = {
       method: 'post',
       handler: async (req) => {
         if (!req.user) {
-          return Response.json(
-            {
-              message: 'not authenticated',
-            },
-            {
-              headers: headersWithCors({
-                headers: new Headers(),
-                req,
-              }),
-            },
-            { status: 401 },
-          )
+          return Response.json('', {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            }),
+            status: 401,
+            statusText: 'not authenticated',
+          })
         }
         if (!req.routeParams?.id) {
-          return Response.json(
-            {
-              message: 'event id not provided',
-            },
-            {
-              headers: headersWithCors({
-                headers: new Headers(),
-                req,
-              }),
-            },
-            { status: 400 },
-          )
+          return Response.json('', {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            }),
+            status: 400,
+            statusText: 'event id not provided',
+          })
         }
         const event = await req.payload.findByID({
           collection: 'events',
@@ -138,16 +131,13 @@ export const Events: CollectionConfig = {
           },
         })
 
-        return Response.json(
-          { message: 'success' },
-          {
-            headers: headersWithCors({
-              headers: new Headers(),
-              req,
-            }),
-          },
-          { status: 200 },
-        )
+        return Response.json('', {
+          headers: headersWithCors({
+            headers: new Headers(),
+            req,
+          }),
+          statusText: 'success',
+        })
       },
     },
     {
@@ -155,32 +145,24 @@ export const Events: CollectionConfig = {
       method: 'post',
       handler: async (req) => {
         if (!req.user) {
-          return Response.json(
-            {
-              message: 'not authenticated',
-            },
-            {
-              headers: headersWithCors({
-                headers: new Headers(),
-                req,
-              }),
-            },
-            { status: 401 },
-          )
+          return Response.json('', {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            }),
+            status: 401,
+            statusText: 'not authenticated',
+          })
         }
         if (!req.routeParams?.id) {
-          return Response.json(
-            {
-              message: 'event id not provided',
-            },
-            {
-              headers: headersWithCors({
-                headers: new Headers(),
-                req,
-              }),
-            },
-            { status: 400 },
-          )
+          return Response.json('', {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            }),
+            status: 400,
+            statusText: 'event id not provided',
+          })
         }
         const event = await req.payload.findByID({
           collection: 'events',
@@ -189,18 +171,14 @@ export const Events: CollectionConfig = {
         })
 
         if (event.registeredUsers?.includes(req.user.id)) {
-          return Response.json(
-            {
-              message: 'already registered',
-            },
-            {
-              headers: headersWithCors({
-                headers: new Headers(),
-                req,
-              }),
-            },
-            { status: 400 },
-          )
+          return Response.json('', {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            }),
+            status: 400,
+            statusText: 'Already registered',
+          })
         }
 
         await req.payload.update({
@@ -222,16 +200,13 @@ export const Events: CollectionConfig = {
           },
         })
 
-        return Response.json(
-          { message: 'success' },
-          {
-            headers: headersWithCors({
-              headers: new Headers(),
-              req,
-            }),
-          },
-          { status: 200 },
-        )
+        return Response.json('', {
+          headers: headersWithCors({
+            headers: new Headers(),
+            req,
+          }),
+          statusText: 'success',
+        })
       },
     },
   ],
