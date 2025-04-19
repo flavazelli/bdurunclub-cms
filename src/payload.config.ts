@@ -3,6 +3,8 @@ import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
 import type { PayloadRequest, TaskConfig, WorkflowConfig } from 'payload'
 import { gcsStorage } from '@payloadcms/storage-gcs'
+import { sentryPlugin } from '@payloadcms/plugin-sentry'
+import * as Sentry from '@sentry/nextjs'
 
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
@@ -134,12 +136,15 @@ export default buildConfig({
         //send telegram message to the channel
         await sendTelegramWeeklyUpdate(events.docs)
         //send email to all users
-        await req.payload.sendEmail({
-          to: users.docs.map((user) => ({ email: user.email })),
-          subject: 'New Runs Published for Next Week',
-          html: nextWeekRunsEmail(events.docs),
-        })
-      },
+        for (const user of users.docs) {
+          await req.payload.sendEmail({
+            to: user.email,
+            subject: 'New Runs Published for Next Week',
+            html: nextWeekRunsEmail(events.docs),
+          })
+        }
+        return new Response('ok', { status: 200 })
+      }
     },
     {
       path: '/send-hour-reminder',
@@ -249,6 +254,13 @@ export default buildConfig({
         projectId: process.env.GCS_PROJECT_ID,
       },
       enabled: process.env.NODE_ENV === 'production',
+    }),
+    sentryPlugin({
+      options: {
+        captureErrors: [400, 403],
+        debug: true,
+      },
+      Sentry,
     }),
   ],
   jobs: {
