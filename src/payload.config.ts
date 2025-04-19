@@ -136,11 +136,13 @@ export default buildConfig({
         //send telegram message to the channel
         await sendTelegramWeeklyUpdate(events.docs)
         //send email to all users
-        await req.payload.sendEmail({
-          bcc: users.docs.map((user) => user.email).join(','),
-          subject: 'New Runs Published for Next Week',
-          html: nextWeekRunsEmail(events.docs),
-        })
+        for (const user of users.docs) {
+          await req.payload.sendEmail({
+            to: user.email,
+            subject: 'New Runs Published for Next Week',
+            html: nextWeekRunsEmail(events.docs),
+          })
+        }
         return new Response('ok', { status: 200 })
       }
     },
