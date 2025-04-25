@@ -131,7 +131,7 @@ export const Events: CollectionConfig = {
               req,
             }),
             status: 400,
-            statusText: 'Cannot register for past events',
+            statusText: 'Cannot unregister for past events',
           })
         }
 
@@ -197,7 +197,7 @@ export const Events: CollectionConfig = {
           })
         }
 
-        
+
 
         if (event.registeredUsers?.includes(req.user.id)) {
           return Response.json('', {
