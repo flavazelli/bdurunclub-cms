@@ -1,17 +1,20 @@
-import { User } from "@/payload-types"
+import { User } from '@/payload-types'
 
-const verificationReminderTemplate = ({ user }: { user: User  }) => {
-    const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${user._verificationToken}`
-    const year = new Date().getFullYear()
-    // Calculate expiration date (7 days from user creation)
-    const createdAt = new Date(user.createdAt) // Assuming `createdAt` exists on the user object
-    const expirationDate = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    })
+const verificationReminderTemplate = ({ user }: { user: User }) => {
+  const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${user._verificationToken}`
+  const year = new Date().getFullYear()
+  // Calculate expiration date (7 days from user creation)
+  const createdAt = new Date(user.createdAt) // Assuming `createdAt` exists on the user object
+  const expirationDate = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(
+    'en-US',
+    {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    },
+  )
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8" />
@@ -52,7 +55,6 @@ const verificationReminderTemplate = ({ user }: { user: User  }) => {
             </table>
         </body>
         </html>`
-        }
+}
 
 export default verificationReminderTemplate
-  

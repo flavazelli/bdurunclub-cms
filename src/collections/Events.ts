@@ -115,6 +115,18 @@ export const Events: CollectionConfig = {
             statusText: 'event id not provided',
           })
         }
+
+        if (new Date(event.eventTime) < new Date()) {
+          return Response.json('', {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            }),
+            status: 400,
+            statusText: 'Cannot register for past events',
+          })
+        }
+
         const event = await req.payload.findByID({
           collection: 'events',
           id: req.routeParams?.id,
@@ -164,6 +176,18 @@ export const Events: CollectionConfig = {
             statusText: 'event id not provided',
           })
         }
+
+        if (new Date(event.eventTime) < new Date()) {
+          return Response.json('', {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            }),
+            status: 400,
+            statusText: 'Cannot register for past events',
+          })
+        }
+
         const event = await req.payload.findByID({
           collection: 'events',
           id: req.routeParams?.id,
