@@ -116,6 +116,14 @@ export const Events: CollectionConfig = {
           })
         }
 
+
+
+        const event = await req.payload.findByID({
+          collection: 'events',
+          id: req.routeParams?.id,
+          depth: 0,
+        })
+
         if (new Date(event.eventTime) < new Date()) {
           return Response.json('', {
             headers: headersWithCors({
@@ -127,11 +135,6 @@ export const Events: CollectionConfig = {
           })
         }
 
-        const event = await req.payload.findByID({
-          collection: 'events',
-          id: req.routeParams?.id,
-          depth: 0,
-        })
 
         const registeredUsers = event.registeredUsers?.filter((userId) => userId !== req.user.id)
 
@@ -177,6 +180,12 @@ export const Events: CollectionConfig = {
           })
         }
 
+        const event = await req.payload.findByID({
+          collection: 'events',
+          id: req.routeParams?.id,
+          depth: 0,
+        })
+
         if (new Date(event.eventTime) < new Date()) {
           return Response.json('', {
             headers: headersWithCors({
@@ -188,11 +197,7 @@ export const Events: CollectionConfig = {
           })
         }
 
-        const event = await req.payload.findByID({
-          collection: 'events',
-          id: req.routeParams?.id,
-          depth: 0,
-        })
+        
 
         if (event.registeredUsers?.includes(req.user.id)) {
           return Response.json('', {
