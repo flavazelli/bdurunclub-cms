@@ -115,11 +115,26 @@ export const Events: CollectionConfig = {
             statusText: 'event id not provided',
           })
         }
+
+
+
         const event = await req.payload.findByID({
           collection: 'events',
           id: req.routeParams?.id,
           depth: 0,
         })
+
+        if (new Date(event.eventTime) < new Date()) {
+          return Response.json('', {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            }),
+            status: 400,
+            statusText: 'Cannot unregister for past events',
+          })
+        }
+
 
         const registeredUsers = event.registeredUsers?.filter((userId) => userId !== req.user.id)
 
@@ -164,11 +179,25 @@ export const Events: CollectionConfig = {
             statusText: 'event id not provided',
           })
         }
+
         const event = await req.payload.findByID({
           collection: 'events',
           id: req.routeParams?.id,
           depth: 0,
         })
+
+        if (new Date(event.eventTime) < new Date()) {
+          return Response.json('', {
+            headers: headersWithCors({
+              headers: new Headers(),
+              req,
+            }),
+            status: 400,
+            statusText: 'Cannot register for past events',
+          })
+        }
+
+
 
         if (event.registeredUsers?.includes(req.user.id)) {
           return Response.json('', {

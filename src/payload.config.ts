@@ -144,7 +144,7 @@ export default buildConfig({
           })
         }
         return new Response('ok', { status: 200 })
-      }
+      },
     },
     {
       path: '/send-hour-reminder',
@@ -166,7 +166,6 @@ export default buildConfig({
           closestQuarterHourOneHourLaterAddMinute.getMinutes() + 1,
         )
 
-
         const events = await req.payload.find({
           collection: 'events',
           where: {
@@ -184,7 +183,6 @@ export default buildConfig({
             ],
           },
         })
-
 
         for (const event of events.docs) {
           for (const user of event.registeredUsers) {
@@ -217,14 +215,14 @@ export default buildConfig({
           return Response.json({ message: 'not authenticated' }, { status: 401 })
         }
 
-        const threeDaysAgo = new Date();
-        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        const threeDaysAgo = new Date()
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
 
-        const startOfDayThreeDaysAgo = new Date(threeDaysAgo);
-        startOfDayThreeDaysAgo.setHours(0, 0, 0, 0);
+        const startOfDayThreeDaysAgo = new Date(threeDaysAgo)
+        startOfDayThreeDaysAgo.setHours(0, 0, 0, 0)
 
-        const endOfDayThreeDaysAgo = new Date(threeDaysAgo);
-        endOfDayThreeDaysAgo.setHours(23, 59, 59, 999);
+        const endOfDayThreeDaysAgo = new Date(threeDaysAgo)
+        endOfDayThreeDaysAgo.setHours(23, 59, 59, 999)
 
         const unverifiedUsers = await req.payload.find({
           showHiddenFields: true,
@@ -232,23 +230,23 @@ export default buildConfig({
           where: {
             and: [
               {
-          _verified: {
-            equals: false,
-          },
+                _verified: {
+                  equals: false,
+                },
               },
               {
-          createdAt: {
-            greater_than_equal: startOfDayThreeDaysAgo.toISOString(),
-          },
+                createdAt: {
+                  greater_than_equal: startOfDayThreeDaysAgo.toISOString(),
+                },
               },
               {
-          createdAt: {
-            less_than_equal: endOfDayThreeDaysAgo.toISOString(),
-          },
+                createdAt: {
+                  less_than_equal: endOfDayThreeDaysAgo.toISOString(),
+                },
               },
             ],
           },
-        });
+        })
 
         //send email to all unverified users
         for (const user of unverifiedUsers.docs) {
@@ -259,37 +257,37 @@ export default buildConfig({
             html: verificationReminderTemplate({
               user,
             }),
-          });
+          })
         }
 
         //delete unverified users created a week ago
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        const startOfDayOneWeekAgo = new Date(oneWeekAgo);
+        const oneWeekAgo = new Date()
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+        const startOfDayOneWeekAgo = new Date(oneWeekAgo)
 
         console.log('Deleting unverified users created before:', startOfDayOneWeekAgo.toISOString())
-        const response  = await req.payload.delete({
+        const response = await req.payload.delete({
           collection: 'users',
           where: {
             and: [
               {
-          _verified: {
-            equals: false, 
-          },
+                _verified: {
+                  equals: false,
+                },
               },
               {
-          createdAt: {
-            less_than_equal: startOfDayOneWeekAgo.toISOString(), 
-          },
+                createdAt: {
+                  less_than_equal: startOfDayOneWeekAgo.toISOString(),
+                },
               },
             ],
           },
         })
 
         return Response.json({
-          message: `${response.docs.length} unverified users deleted`
+          message: `${response.docs.length} unverified users deleted`,
         })
-      }
+      },
     },
   ],
   secret: process.env.PAYLOAD_SECRET || '',
