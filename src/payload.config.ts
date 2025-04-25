@@ -95,6 +95,7 @@ export default buildConfig({
             ],
           },
         })
+
         // If there are no events to publish, return early
 
         if (events.totalDocs === 0) {
@@ -165,6 +166,7 @@ export default buildConfig({
           closestQuarterHourOneHourLaterAddMinute.getMinutes() + 1,
         )
 
+
         const events = await req.payload.find({
           collection: 'events',
           where: {
@@ -182,6 +184,7 @@ export default buildConfig({
             ],
           },
         })
+
 
         for (const event of events.docs) {
           for (const user of event.registeredUsers) {
