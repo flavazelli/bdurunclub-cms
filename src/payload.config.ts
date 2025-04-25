@@ -22,6 +22,7 @@ import sendHourReminder from './collections/emailTemplates/sendHourReminder'
 import { v4 as uuidv4 } from 'uuid'
 import { nextWeekRunsEmail } from './collections/emailTemplates/nextWeeksRuns'
 import { sendTelegramWeeklyUpdate } from '@/integrations/telegram/sendTelegramWeeklyUpdate'
+import verificationReminderTemplate from './collections/emailTemplates/verificationEmailReminder'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -95,7 +96,6 @@ export default buildConfig({
           },
         })
 
-        console.log('Events to publish:', events.docs)
         // If there are no events to publish, return early
 
         if (events.totalDocs === 0) {
@@ -165,30 +165,7 @@ export default buildConfig({
         closestQuarterHourOneHourLaterAddMinute.setMinutes(
           closestQuarterHourOneHourLaterAddMinute.getMinutes() + 1,
         )
-        console.log(
-          'Closest quarter hour + 1 hour:',
-          closestQuarterHourOneHourLater.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'America/Toronto',
-          }),
-        )
-        console.log(
-          'Closest quarter hour + 1 hour + 1 minute:',
-          closestQuarterHourOneHourLaterAddMinute.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'America/Toronto',
-          }),
-        )
+
 
         const events = await req.payload.find({
           collection: 'events',
@@ -208,7 +185,6 @@ export default buildConfig({
           },
         })
 
-        console.log('Events to send reminder for:', events.docs)
 
         for (const event of events.docs) {
           for (const user of event.registeredUsers) {
@@ -230,6 +206,90 @@ export default buildConfig({
           message: 'Emails sent successfully',
         })
       },
+    },
+    {
+      path: '/manage-unverified-users',
+      method: 'get',
+      handler: async (req) => {
+        //called once a day
+        const authHeader = req.headers.get('authorization')
+        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+          return Response.json({ message: 'not authenticated' }, { status: 401 })
+        }
+
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+        const startOfDayThreeDaysAgo = new Date(threeDaysAgo);
+        startOfDayThreeDaysAgo.setHours(0, 0, 0, 0);
+
+        const endOfDayThreeDaysAgo = new Date(threeDaysAgo);
+        endOfDayThreeDaysAgo.setHours(23, 59, 59, 999);
+
+        const unverifiedUsers = await req.payload.find({
+          showHiddenFields: true,
+          collection: 'users',
+          where: {
+            and: [
+              {
+          _verified: {
+            equals: false,
+          },
+              },
+              {
+          createdAt: {
+            greater_than_equal: startOfDayThreeDaysAgo.toISOString(),
+          },
+              },
+              {
+          createdAt: {
+            less_than_equal: endOfDayThreeDaysAgo.toISOString(),
+          },
+              },
+            ],
+          },
+        });
+
+        //send email to all unverified users
+        for (const user of unverifiedUsers.docs) {
+          console.log(user)
+          await req.payload.sendEmail({
+            to: user.email,
+            subject: 'Account Verification Reminder',
+            html: verificationReminderTemplate({
+              user,
+            }),
+          });
+        }
+
+        //delete unverified users created a week ago
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const startOfDayOneWeekAgo = new Date(oneWeekAgo);
+
+        console.log('Deleting unverified users created before:', startOfDayOneWeekAgo.toISOString())
+        const response  = await req.payload.delete({
+          collection: 'users',
+          where: {
+            and: [
+              {
+          _verified: {
+            equals: false, 
+          },
+              },
+              {
+          createdAt: {
+            less_than_equal: startOfDayOneWeekAgo.toISOString(), 
+          },
+              },
+            ],
+          },
+        })
+
+        return Response.json({
+          message: `${response.docs.length} unverified users deleted`
+        })
+      }
     },
   ],
   secret: process.env.PAYLOAD_SECRET || '',
