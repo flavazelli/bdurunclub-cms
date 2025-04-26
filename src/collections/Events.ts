@@ -4,9 +4,7 @@ import { headersWithCors } from 'payload'
 import { anyone } from './access/anyone'
 import { authenticated } from './access/authenticated'
 import { admins } from './access/admins'
-import { stat } from 'fs'
 import sendCancellationNotice from './emailTemplates/sendCancellationNotice'
-import { register } from 'module'
 
 export const Events: CollectionConfig = {
   slug: 'events',
