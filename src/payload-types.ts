@@ -191,6 +191,8 @@ export interface Event {
   description?: string | null;
   gpxFile: (string | GpxFile)[];
   registeredUsers?: (string | User)[] | null;
+  canceled?: boolean | null;
+  cancellationReason?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -406,6 +408,8 @@ export interface EventsSelect<T extends boolean = true> {
   description?: T;
   gpxFile?: T;
   registeredUsers?: T;
+  canceled?: T;
+  cancellationReason?: T;
   updatedAt?: T;
   createdAt?: T;
 }
