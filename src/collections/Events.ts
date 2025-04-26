@@ -4,7 +4,7 @@ import { headersWithCors } from 'payload'
 import { anyone } from './access/anyone'
 import { authenticated } from './access/authenticated'
 import { admins } from './access/admins'
-import { stat } from 'fs'
+import sendCancellationNotice from './emailTemplates/sendCancellationNotice'
 
 export const Events: CollectionConfig = {
   slug: 'events',
@@ -89,6 +89,68 @@ export const Events: CollectionConfig = {
       defaultValue: [],
       hasMany: true,
     },
+    {
+      name: 'canceled',
+      type: 'checkbox',
+      defaultValue: false,
+      hooks: {
+        afterChange: [async ({context, data, previousData, req, originalDoc}) => {
+          if (context.triggerAfterChange === false) {
+            return
+          }
+
+          if (data.canceled && previousData?.canceled !== data.canceled) {
+
+              const event = await req.payload.findByID({
+                collection: 'events',
+                id: originalDoc.id,
+                depth: 1,
+              });
+
+              event.registeredUsers?.forEach(async (user) => {
+                await req.payload.sendEmail({
+                to: user.email,
+                subject: `BduRunClub - 🛑 Cancelation 🛑 ${event.title}`,
+                html: sendCancellationNotice({
+                  firstName: user.firstName,
+                  eventTitle: event.title,
+                  eventTime: event.eventTime,
+                  cancelReason: event.cancellationReason,
+                }),
+                });
+              });
+
+              await req.payload.update({
+                collection: 'events',
+                id: originalDoc.id,
+                data: {
+                registeredUsers: [],
+                },
+                context: {
+                  // set a flag to prevent from running again
+                  triggerAfterChange: false,
+                },
+              });
+          }
+        }], 
+        beforeDuplicate: [async ({data, req}) => {
+          if (data.canceled) {
+            data.canceled = false;
+          }
+
+          if (data.cancellationReason) {
+            data.cancellationReason = '';
+          }
+        }]
+      }
+    },
+    {
+      name: 'cancellationReason',
+      type: 'text',
+      admin: {
+        condition: (_, siblingData) => siblingData.canceled,
+      },
+    }
   ],
   endpoints: [
     {
