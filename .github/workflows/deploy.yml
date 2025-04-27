@@ -1,4 +1,4 @@
-name: Deploy Frontend
+name: Deploy Backend
 
 on:
   workflow_dispatch:
@@ -49,23 +49,13 @@ jobs:
         instance_name: 'hobby-vm'
         zone: 'northamerica-northeast2-a'
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
-        script: | 
-          cd /opt/infra/docker-compose 
-          # Write environment variables to .env
+        script: |
+          # Fetch the secret from Google Secret Manager (assumes `app_env` contains JSON key-value pairs)
+          app_env_json=$(gcloud secrets versions access latest --secret="app_env" --format="json")
 
-          echo "CRON_SECRET=${{ secrets.CRON_SECRET }}" > .env
-          echo "CLIENT_URL=https://bdurunclub.com" >> .env
-          echo "GCS_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}" >> .env
-          echo "SMTP_PASS=${{ secrets.JWT_SECRET }}" >> .env
-          echo "GCS_BUCKET=${{ secrets.JWT_SECRET }}" >> .env
-          echo "PAYLOAD_CONFIG_PATH=dist/payload.config.js" >> .env
-          echo "SERVER_URL=https://backend.bdurunclub.com" >> .env
-          echo "SMTP_HOST=smtp.gmail.com" >> .env
-          echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" >> .env
-          echo "DATABASE_NAME=bdurunclub" >> .env
-          echo "PAYLOAD_SECRET=${{ secrets.PAYLOAD_SECRET }}" >> .env
-          echo "SMTP_USER=francis.lavazelli@gmail.com" >> .env
-          echo "DATABASE_URI=mongodb://root:abSddk3Ji8UNHS9G2UvyqqpZ@10.188.0.29:27017/bdurunclub?authSource=admin" >> .env
-          echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> .env
+          # Create .env file and write each key-value pair to it
+          echo "$app_env_json" | jq -r 'to_entries[] | "\(.key)=\(.value)"' > /opt/infra/docker-compose/.env
 
+          # Pull and restart backend containers
+          cd /opt/infra/docker-compose
           docker-compose pull && docker-compose up -d
