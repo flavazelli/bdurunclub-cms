@@ -17,9 +17,6 @@ jobs:
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}  # Use Service Account Key JSON from GitHub secrets
-        # OR if using Workload Identity Federation:
-        # workload_identity_provider: "projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider"
-        # service_account: "my-service-account@my-project.iam.gserviceaccount.com"
 
     - name: Authenticate Docker with Google Cloud
       uses: google-github-actions/setup-gcloud@v0.3.0
@@ -43,20 +40,30 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - id: 'compute-ssh'
-      uses: 'google-github-actions/ssh-compute@v1'
+    - name: Upload Script to VM
+      run: |
+        echo "
+        #!/bin/bash
+        set -e
+
+        # Fetch the secret from Google Secret Manager and save it to a file
+        gcloud secrets versions access latest --secret=\"app_env\" --format=\"json\" > app_env.json
+
+        # Convert the fetched secret JSON to environment variable format
+        cat app_env.json | jq -r 'to_entries[] | \"\(.key)=\(.value)\"' > /opt/infra/docker-compose/.env
+
+        # Pull and restart backend containers
+        cd /opt/infra/docker-compose
+        docker-compose pull backend
+        docker-compose up -d backend
+        " > deploy_backend_script.sh
+
+    - name: Copy and Execute Script on VM
+      uses: google-github-actions/ssh-compute@v1
       with:
         instance_name: 'hobby-vm'
         zone: 'northamerica-northeast2-a'
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         script: |
-          # Fetch the secret from Google Secret Manager (assumes `app_env` contains JSON key-value pairs)
-          gcloud secrets versions access latest --secret="app_env" --format="json" > app_env.json
-
-          # Convert the fetched secret JSON to environment variable format
-          cat app_env.json | jq -r 'to_entries[] | "\(.key)=\(.value)"' > /opt/infra/docker-compose/.env
-
-          # Pull and restart backend containers
-          cd /opt/infra/docker-compose
-          docker-compose pull backend
-          docker-compose up -d backend
+          chmod +x deploy_backend_script.sh
+          ./deploy_backend_script.sh
