@@ -1,0 +1,71 @@
+name: Deploy Frontend
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Authenticate with GCP
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}  # Use Service Account Key JSON from GitHub secrets
+        # OR if using Workload Identity Federation:
+        # workload_identity_provider: "projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider"
+        # service_account: "my-service-account@my-project.iam.gserviceaccount.com"
+
+    - name: Authenticate Docker with Google Cloud
+      uses: google-github-actions/setup-gcloud@v0.3.0
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Docker authentication for Artifact Registry
+      run: |
+        gcloud auth configure-docker northamerica-northeast2-docker.pkg.dev
+
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: northamerica-northeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bdurunclub/backend:${{ github.sha }}
+        
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - id: 'compute-ssh'
+      uses: 'google-github-actions/ssh-compute@v1'
+      with:
+        instance_name: 'hobby-vm'
+        zone: 'northamerica-northeast2-a'
+        ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
+        script: | 
+          cd /opt/infra/docker-compose 
+          # Write environment variables to .env
+
+          echo "CRON_SECRET=${{ secrets.CRON_SECRET }}" > .env
+          echo "CLIENT_URL=https://bdurunclub.com" >> .env
+          echo "GCS_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}" >> .env
+          echo "SMTP_PASS=${{ secrets.JWT_SECRET }}" >> .env
+          echo "GCS_BUCKET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "PAYLOAD_CONFIG_PATH=dist/payload.config.js" >> .env
+          echo "SERVER_URL=https://backend.bdurunclub.com" >> .env
+          echo "SMTP_HOST=smtp.gmail.com" >> .env
+          echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" >> .env
+          echo "DATABASE_NAME=bdurunclub" >> .env
+          echo "PAYLOAD_SECRET=${{ secrets.PAYLOAD_SECRET }}" >> .env
+          echo "SMTP_USER=francis.lavazelli@gmail.com" >> .env
+          echo "DATABASE_URI=mongodb://root:abSddk3Ji8UNHS9G2UvyqqpZ@10.188.0.29:27017/bdurunclub?authSource=admin" >> .env
+          echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> .env
+
+          docker-compose pull && docker-compose up -d
