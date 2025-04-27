@@ -35,29 +35,6 @@ jobs:
         push: true
         tags: northamerica-northeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bdurunclub/backend:${{ github.sha }}
         
-    - id: 'auth'
-      uses: 'google-github-actions/auth@v2'
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-    - name: Upload Script to VM
-      run: |
-        echo "
-        #!/bin/bash
-        set -e
-
-        # Fetch the secret from Google Secret Manager and save it to a file
-        gcloud secrets versions access latest --secret=\"app_env\" > app_env.json
-
-        # Convert the fetched secret JSON to environment variable format
-        cat app_env.json | jq -r 'to_entries[] | \"\(.key)=\(.value)\"' > /opt/infra/docker-compose/.env
-
-        # Pull and restart backend containers
-        cd /opt/infra/docker-compose
-        docker-compose pull backend
-        docker-compose up -d backend
-        " > deploy_backend_script.sh
-
     - name: Copy and Execute Script on VM
       uses: google-github-actions/ssh-compute@v1
       with:
@@ -65,5 +42,10 @@ jobs:
         zone: 'northamerica-northeast2-a'
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         script: |
-          chmod +x deploy_backend_script.sh
-          ./deploy_backend_script.sh
+          gcloud secrets versions access latest --secret=\"app_env\" > app_env.json
+          # Convert the fetched secret JSON to environment variable format
+          cat app_env.json | jq -r 'to_entries[] | \"\(.key)=\(.value)\"' > /opt/infra/docker-compose/.env
+          rm app_env.json
+          cd /opt/infra/docker-compose
+          docker-compose pull backend
+          docker-compose up -d backend
