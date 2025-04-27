@@ -47,7 +47,7 @@ jobs:
         set -e
 
         # Fetch the secret from Google Secret Manager and save it to a file
-        gcloud secrets versions access latest --secret=\"app_env\" --format=\"json\" > app_env.json
+        gcloud secrets versions access latest --secret=\"app_env\" > app_env.json
 
         # Convert the fetched secret JSON to environment variable format
         cat app_env.json | jq -r 'to_entries[] | \"\(.key)=\(.value)\"' > /opt/infra/docker-compose/.env
