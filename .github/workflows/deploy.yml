@@ -51,11 +51,12 @@ jobs:
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         script: |
           # Fetch the secret from Google Secret Manager (assumes `app_env` contains JSON key-value pairs)
-          app_env_json=$(gcloud secrets versions access latest --secret="app_env" --format="json")
+          gcloud secrets versions access latest --secret="app_env" --format="json" > app_env.json
 
-          # Create .env file and write each key-value pair to it
-          echo "$app_env_json" | jq -r 'to_entries[] | "\(.key)=\(.value)"' > /opt/infra/docker-compose/.env
+          # Convert the fetched secret JSON to environment variable format
+          cat app_env.json | jq -r 'to_entries[] | "\(.key)=\(.value)"' > /opt/infra/docker-compose/.env
 
           # Pull and restart backend containers
           cd /opt/infra/docker-compose
-          docker-compose pull && docker-compose up -d
+          docker-compose pull backend
+          docker-compose up -d backend
