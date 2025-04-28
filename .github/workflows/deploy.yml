@@ -37,7 +37,7 @@ jobs:
 
     - name: Copy app_env.json to VM
       run: |
-        gcloud compute scp app_env.json flavazelli@hobby-vm:/infra/opt/docker-compose/app_env.json \
+        gcloud compute scp app_env.json flavazelli@hobby-vm:/opt/infra/docker-compose/app_env.json \
           --zone=northamerica-northeast2-a \
           --project=${{ secrets.GCP_PROJECT_ID }} \
           --quiet
