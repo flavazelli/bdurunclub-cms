@@ -52,6 +52,7 @@ jobs:
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         command: |
           set -e
+          pwd
           # Convert the uploaded app_env.json into .env file
           cat ~/app_env.json | jq -r 'to_entries[] | "\(.key)=\(.value)"' > /opt/infra/docker-compose/.env
           rm ~/app_env.json
