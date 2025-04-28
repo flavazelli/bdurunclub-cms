@@ -45,4 +45,4 @@ jobs:
           rm app_env.json
           cd /opt/infra/docker-compose
           docker-compose pull backend
-          docker-compose up restart backend
+          docker-compose restart backend
