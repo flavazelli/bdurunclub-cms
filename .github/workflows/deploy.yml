@@ -38,7 +38,18 @@ jobs:
         zone: 'northamerica-northeast2-a'
         user: 'flavazelli'
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
-        script: '${{ github.workspace }}/infrastructure/scripts/deploy.sh'
+        command: |
+          set -e
+          gcloud secrets versions access latest --secret=\"app_env\" > app_env.json
+          # Convert the fetched secret JSON to environment variable format
+          cat app_env.json | jq -r "to_entries[] | \"\(.key)=\(.value)\"" > /opt/infra/docker-compose/.env
+          rm app_env.json
+          cd /opt/infra/docker-compose
+          echo "Updating docker-compose.yml with the new backend image..."
+          sudo sed -i "s|image: .*/backend:.*|image: northamerica-northeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bdurunclub/backend:${{ github.sha }}|" docker-compose.yml
+          echo "docker-compose.yml updated successfully."
+          sudo docker-compose pull && sudo docker-compose up -d --no-deps backend
+          sudo docker image prune -f
     - name: 'Show Output'
       run: |-
         echo '${{ steps.ssh.outputs.stdout }}'
