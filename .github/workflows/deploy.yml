@@ -13,20 +13,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - id: 'auth'
     - name: Authenticate with GCP
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}  # Use Service Account Key JSON from GitHub secrets
 
-    - name: Authenticate Docker with Google Cloud
-      uses: google-github-actions/setup-gcloud@v0.3.0
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v2'
 
-    - name: Set up Docker authentication for Artifact Registry
-      run: |
-        gcloud auth configure-docker northamerica-northeast2-docker.pkg.dev
+    - name: 'Set up Docker authentication for Artifact Registry'
+      run: 'gcloud auth configure-docker northamerica-northeast2-docker.pkg.dev'
 
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
@@ -44,8 +41,8 @@ jobs:
         script: |
           gcloud secrets versions access latest --secret=\"app_env\" > app_env.json
           # Convert the fetched secret JSON to environment variable format
-          cat app_env.json | jq -r 'to_entries[] | \"\(.key)=\(.value)\"' > /opt/infra/docker-compose/.env
+          cat app_env.json | jq -r 'to_entries[] | "\(.key)=\(.value)"' > /opt/infra/docker-compose/.env
           rm app_env.json
           cd /opt/infra/docker-compose
           docker-compose pull backend
-          docker-compose up -d backend
+          docker-compose up restart backend
