@@ -24,25 +24,25 @@ jobs:
     - name: 'Set up Docker authentication for Artifact Registry'
       run: 'gcloud auth configure-docker northamerica-northeast2-docker.pkg.dev'
 
-    # - name: Build and Push Docker Image
-    #   uses: docker/build-push-action@v5
-    #   with:
-    #     context: .
-    #     push: true
-    #     tags: northamerica-northeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bdurunclub/backend:${{ github.sha }}
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: northamerica-northeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bdurunclub/backend:${{ github.sha }}
 
-    # - name: Fetch app_env Secret
-    #   run: |
-    #     gcloud secrets versions access latest --secret="app_env" > app_env.json
+    - name: Fetch app_env Secret
+      run: |
+        gcloud secrets versions access latest --secret="app_env" > app_env.json
 
-    # - name: Copy app_env.json to VM
-    #   run: |
-    #     gcloud compute scp app_env.json flavazelli@hobby-vm:/opt/infra/docker-compose/app_env.json \
-    #       --zone=northamerica-northeast2-a \
-    #       --project=${{ secrets.GCP_PROJECT_ID }} \
-    #       --quiet
-    #   env:
-    #     GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+    - name: Copy app_env.json to VM
+      run: |
+        gcloud compute scp app_env.json flavazelli@hobby-vm:/opt/infra/docker-compose/app_env.json \
+          --zone=northamerica-northeast2-a \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
+          --quiet
+      env:
+        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
     - name: Execute Deployment Commands on VM
       uses: google-github-actions/ssh-compute@v1
