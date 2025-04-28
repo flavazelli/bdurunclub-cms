@@ -16,7 +16,7 @@ jobs:
     - name: Authenticate with GCP
       uses: google-github-actions/auth@v2
       with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}  # Use Service Account Key JSON from GitHub secrets
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
 
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v2'
@@ -30,7 +30,20 @@ jobs:
         context: .
         push: true
         tags: northamerica-northeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bdurunclub/backend:${{ github.sha }}
-        
+
+    - name: Fetch app_env Secret
+      run: |
+        gcloud secrets versions access latest --secret="app_env" > app_env.json
+
+    - name: Copy app_env.json to VM
+      run: |
+        gcloud compute scp app_env.json flavazelli@hobby-vm:/home/flavazelli/app_env.json \
+          --zone=northamerica-northeast2-a \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
+          --quiet
+      env:
+        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
     - name: Copy and Execute Script on VM
       uses: google-github-actions/ssh-compute@v1
       with:
@@ -40,19 +53,21 @@ jobs:
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         command: |
           set -e
-          sudo gcloud secrets versions access latest --secret="app_env" > app_env.json
-          # Convert the fetched secret JSON to environment variable format
-          cat app_env.json | jq -r 'to_entries[] | "\(.key)=\(.value)"' > /opt/infra/docker-compose/.env
-          rm app_env.json
-          echo "Secret saved as env.production"
+          # Convert the uploaded app_env.json into .env file
+          cat ~/app_env.json | jq -r 'to_entries[] | "\(.key)=\(.value)"' > /opt/infra/docker-compose/.env
+          rm ~/app_env.json
+          echo "Secret saved as .env file."
+          
           cd /opt/infra/docker-compose
           echo "Updating docker-compose.yml with the new backend image..."
           sudo sed -i "s|image: .*/backend:.*|image: northamerica-northeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bdurunclub/backend:${{ github.sha }}|" docker-compose.yml
           echo "docker-compose.yml updated successfully."
-          sudo docker-compose pull && sudo docker-compose up -d --no-deps backend
+          
+          sudo docker-compose pull
+          sudo docker-compose up -d --no-deps backend
           sudo docker image prune -f
+
     - name: 'Show Output'
       run: |-
         echo '${{ steps.ssh.outputs.stdout }}'
         echo '${{ steps.ssh.outputs.stderr }}'
-          
