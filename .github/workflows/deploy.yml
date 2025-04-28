@@ -36,7 +36,7 @@ jobs:
       with:
         instance_name: 'hobby-vm'
         zone: 'northamerica-northeast2-a'
-        ssh_username: 'flavazelli'
+        user: 'flavazelli'
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         script: '${{ github.workspace }}/infrastructure/scripts/deploy.sh'
     - name: 'Show Output'
