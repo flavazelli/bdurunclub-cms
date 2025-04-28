@@ -36,6 +36,7 @@ jobs:
       with:
         instance_name: 'hobby-vm'
         zone: 'northamerica-northeast2-a'
+        ssh_username: 'flavazelli'
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         script: |
           echo "TEST"
