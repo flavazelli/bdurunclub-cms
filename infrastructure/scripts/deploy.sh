@@ -4,4 +4,4 @@ cat app_env.json | jq -r "to_entries[] | \"\(.key)=\(.value)\"" > /opt/infra/doc
 rm app_env.json
 cd /opt/infra/docker-compose
 sudo docker-compose pull backend
-sudo docker-compose up -d backend
+sudo docker-compose up -d --no-deps backend
