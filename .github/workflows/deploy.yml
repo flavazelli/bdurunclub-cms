@@ -49,7 +49,6 @@ jobs:
       with:
         instance_name: 'hobby-vm'
         zone: 'northamerica-northeast2-a'
-        user: 'flavazelli'
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         command: |
           set -e
