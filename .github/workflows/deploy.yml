@@ -39,4 +39,8 @@ jobs:
         ssh_username: 'flavazelli'
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         script: '${{ github.workspace }}/infrastructure/scripts/deploy.sh'
+    - name: 'Show Output'
+      run: |-
+        echo '${{ steps.ssh.outputs.stdout }}'
+        echo '${{ steps.ssh.outputs.stderr }}'
           
