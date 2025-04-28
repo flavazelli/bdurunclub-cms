@@ -37,7 +37,7 @@ jobs:
 
     - name: Copy app_env.json to VM
       run: |
-        gcloud compute scp app_env.json flavazelli@hobby-vm:/home/flavazelli/app_env.json \
+        gcloud compute scp app_env.json flavazelli@hobby-vm:/infra/opt/docker-compose/app_env.json \
           --zone=northamerica-northeast2-a \
           --project=${{ secrets.GCP_PROJECT_ID }} \
           --quiet
@@ -52,12 +52,12 @@ jobs:
         ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
         command: |
           set -e
+          pwd
           # Convert the uploaded app_env.json into .env file
+          cd /opt/infra/docker-compose
           cat ~/app_env.json | jq -r 'to_entries[] | "\(.key)=\(.value)"' > /opt/infra/docker-compose/.env
           rm ~/app_env.json
           echo "Secret saved as .env file."
-          
-          cd /opt/infra/docker-compose
           echo "Updating docker-compose.yml with the new backend image..."
           sudo sed -i "s|image: .*/backend:.*|image: northamerica-northeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bdurunclub/backend:${{ github.sha }}|" docker-compose.yml
           echo "docker-compose.yml updated successfully."
