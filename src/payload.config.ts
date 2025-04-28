@@ -38,8 +38,8 @@ export default buildConfig({
     },
   },
   serverURL: process.env.SERVER_URL || 'http://localhost:3000',
-  cors: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:4173'],
-  csrf: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:4173'],
+  cors: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:4173', 'https://test1.bdurunclub.com'],
+  csrf: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:4173', 'https://test1.bdurunclub.com'],
   collections: [Users, Events, GPXFiles],
   editor: lexicalEditor(),
   email: nodemailerAdapter({
