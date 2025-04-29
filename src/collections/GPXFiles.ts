@@ -17,7 +17,7 @@ export const GPXFiles: CollectionConfig = {
     pasteURL: {
       allowList: [
         {
-          hostname: 'bdurunclub.com', // required
+          hostname: 'assets.bdurunclub.com', // required
           pathname: '',
           port: '',
           protocol: 'http',
