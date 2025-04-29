@@ -14,5 +14,17 @@ export const GPXFiles: CollectionConfig = {
   ],
   upload: {
     mimeTypes: ['application/octet-stream'],
+    pasteURL: {
+      allowList: [
+        {
+          hostname: 'bdurunclub.com', // required
+          pathname: '',
+          port: '',
+          protocol: 'http',
+          search: ''
+        }
+      ],
+    },
+    
   },
 }
