@@ -56,6 +56,9 @@ jobs:
 
           cd /opt/infra/docker-compose
 
+          cat env.json| jq -r 'to_entries[] | "\(.key)=\(.value)"' > .env
+          echo "converted env json to .env"
+
           echo "Updating docker-compose.yml with new backend image..."
           sudo sed -i "s|image: .*/backend:.*|image: northamerica-northeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bdurunclub/backend:${{ github.sha }}|" docker-compose.yml
 
