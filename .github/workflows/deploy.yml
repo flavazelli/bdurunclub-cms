@@ -56,7 +56,7 @@ jobs:
 
           cd /opt/infra/docker-compose
 
-          sudo bash -c cat env.json| jq -r 'to_entries[] | "\(.key)=\(.value)"' > .env
+          jq -r 'to_entries[] | "\(.key)=\(.value)"' env.json | sudo tee .env > /dev/null
           echo "converted env json to .env"
 
           echo "Updating docker-compose.yml with new backend image..."
