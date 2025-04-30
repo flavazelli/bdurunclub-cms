@@ -43,7 +43,7 @@ export default buildConfig({
   collections: [Users, Events, GPXFiles],
   editor: lexicalEditor(),
   email: nodemailerAdapter({
-    defaultFromAddress: 'MS_QQYbjA@bdurunclub.com',
+    defaultFromAddress: 'no-reply@bdurunclub.com',
     defaultFromName: '🏃 BDURunClub',
     transportOptions: {
       host: process.env.SMTP_HOST,
