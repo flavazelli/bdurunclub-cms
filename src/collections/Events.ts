@@ -141,6 +141,15 @@ export const Events: CollectionConfig = {
           if (data.cancellationReason) {
             data.cancellationReason = '';
           }
+          if (data.visible) {
+            data.visible = false;
+          }
+
+          if (data.registeredUsers.length > 0) {
+            data.registeredUsers = [];
+          }
+          //whichever comes first : next wednsesday or saturday at 11AM
+          data.eventTime = [3,6].map(d => { let n=new Date(),r=new Date(n); r.setDate(n.getDate()+((d+7-n.getDay())%7||7)); r.setHours(11,0,0,0); return r; }).sort((a,b)=>a-b)[0].toISOString();
         }]
       }
     },
