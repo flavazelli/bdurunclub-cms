@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { headersWithCors } from 'payload'
 
 import { anyone } from './access/anyone'
+import { authenticatedOrPublic } from './access/authenticatedOrPublic'
 import { authenticated } from './access/authenticated'
 import { admins } from './access/admins'
 import sendCancellationNotice from './emailTemplates/sendCancellationNotice'
@@ -10,13 +11,13 @@ export const Events: CollectionConfig = {
   slug: 'events',
   access: {
     read: ({ req }) => {
-      if (!req.user! || !req.user?.roles?.includes('admin')) {
+     if (!req.user! || !req.user?.roles?.includes('admin')) {
         return {
           or: [
             {
               visible: {
                 equals: true,
-              },
+              }
             },
           ],
         }
@@ -48,6 +49,14 @@ export const Events: CollectionConfig = {
       },
     },
     {
+      name:'public', 
+      type: 'checkbox', 
+      defaultValue: false,
+      access: {
+        read: anyone
+      }
+    },
+    {
       name: 'visible',
       type: 'checkbox',
       defaultValue: false,
@@ -59,14 +68,14 @@ export const Events: CollectionConfig = {
       name: 'startingLocation',
       type: 'text',
       access: {
-        read: authenticated,
+        read: authenticatedOrPublic,
       },
     },
     {
       name: 'description',
       type: 'textarea',
       access: {
-        read: authenticated,
+        read: authenticatedOrPublic,
       },
     },
     {
