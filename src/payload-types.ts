@@ -186,6 +186,7 @@ export interface Event {
   id: string;
   title?: string | null;
   eventTime?: string | null;
+  public?: boolean | null;
   visible?: boolean | null;
   startingLocation?: string | null;
   description?: string | null;
@@ -403,6 +404,7 @@ export interface UsersSelect<T extends boolean = true> {
 export interface EventsSelect<T extends boolean = true> {
   title?: T;
   eventTime?: T;
+  public?: T;
   visible?: T;
   startingLocation?: T;
   description?: T;
