@@ -23,6 +23,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { nextWeekRunsEmail } from './collections/emailTemplates/nextWeeksRuns'
 import { sendTelegramWeeklyUpdate } from '@/integrations/telegram/sendTelegramWeeklyUpdate'
 import verificationReminderTemplate from './collections/emailTemplates/verificationEmailReminder'
+import axios from 'axios'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -136,13 +137,34 @@ export default buildConfig({
         //send telegram message to the channel
         await sendTelegramWeeklyUpdate(events.docs)
         //send email to all users
-        for (const user of users.docs) {
-          await req.payload.sendEmail({
-            to: user.email,
-            subject: 'New Runs Published for Next Week',
-            html: nextWeekRunsEmail(events.docs),
-          })
+        const subject = 'New Runs Published for Next Week'
+        const html = nextWeekRunsEmail(events.docs)
+        const recipients = users.docs.map(user => ({
+          to: [
+            {
+              email: user.email,
+              name: `${user.firstName} ${user.lastName}`,
+            },
+          ]
+        }))
+
+        const postData = {
+          sender: {
+            email: 'no-reply@bdurunclub.com',
+            name: '🏃 BDURunClub',
+          },
+          subject: subject,
+          htmlContent: html,
+          messageVersions: recipients,
         }
+
+        await axios.post('https://api.brevo.com/v3/smtp/email', postData, {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'api-key': process.env.BREVO_API_KEY,
+          },
+        })
         return new Response('ok', { status: 200 })
       },
     },
