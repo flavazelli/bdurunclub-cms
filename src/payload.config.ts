@@ -132,39 +132,21 @@ export default buildConfig({
 
         const users = await req.payload.find({
           collection: 'users',
+          pagination: false,
         })
 
         //send telegram message to the channel
         await sendTelegramWeeklyUpdate(events.docs)
-        //send email to all users
-        const subject = 'New Runs Published for Next Week'
-        const html = nextWeekRunsEmail(events.docs)
-        const recipients = users.docs.map(user => ({
-          to: [
-            {
-              email: user.email,
-              name: `${user.firstName} ${user.lastName}`,
-            },
-          ]
-        }))
 
-        const postData = {
-          sender: {
-            email: 'no-reply@bdurunclub.com',
-            name: '🏃 BDURunClub',
-          },
-          subject: subject,
-          htmlContent: html,
-          messageVersions: recipients,
+        //send email to all users
+        for (const user of users.docs) {
+          await req.payload.sendEmail({
+            to: user.email,
+            subject: 'New Runs Published for Next Week',
+            html: nextWeekRunsEmail(events.docs),
+          })
         }
 
-        await axios.post('https://api.brevo.com/v3/smtp/email', postData, {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'api-key': process.env.BREVO_API_KEY,
-          },
-        })
         return new Response('ok', { status: 200 })
       },
     },
